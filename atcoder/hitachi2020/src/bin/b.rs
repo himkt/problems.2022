@@ -8,16 +8,11 @@ fn main() {
         m: usize,
         va: [i32; a],
         vb: [i32; b],
-        x: [[i32; 3]; m]
+        x: [(usize, usize, i32); m]
     }
 
-    let mut ans = va.iter().min().unwrap()
-                  + vb.iter().min().unwrap();
-
-    for xi in x {
-        let ai = xi[0] as usize;
-        let bi = xi[1] as usize;
-        let c  = xi[2];
+    let mut ans = va.iter().min().unwrap() + vb.iter().min().unwrap();
+    for (ai, bi, c) in x {
         ans = std::cmp::min(ans, va[ai-1] + vb[bi-1] - c);
     }
 
