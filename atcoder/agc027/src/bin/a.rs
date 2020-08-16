@@ -1,17 +1,8 @@
 use proconio::input;
 
-fn main() {
-    input!{
-        n: i64,
-        x: i64,
-        mut a: [i64; n],
-    }
 
-    let mut x = x;
+fn solve(n: i64, mut x: i64, a: Vec::<i64>) -> i64 {
     let mut ans = 0;
-
-    a.sort();
-
     for i in 0..n as usize {
         x -= a[i];
         ans += 1;
@@ -25,5 +16,17 @@ fn main() {
         ans -= 1;
     }
 
-    println!("{}", ans);
+    return ans;
+}
+
+
+fn main() {
+    input!{
+        n: i64,
+        mut x: i64,
+        mut a: [i64; n],
+    }
+
+    a.sort();
+    println!("{}", solve(n, x, a));
 }
