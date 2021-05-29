@@ -1,53 +1,48 @@
-use std::cmp::Ordering;
-
 use proconio::input;
+use std::collections::HashSet;
 
 
-#[derive(Copy,Clone,Eq,PartialEq,Debug)]
-struct Point {
-    p1: (i64, i64),
-    p2: (i64, i64),
-    dist: i64,
-}
-
-impl Ord for Point {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.dist.cmp(&other.dist)
+// Replicate the existing submission line-by-line
+// ref. https://atcoder.jp/contests/arc121/submissions/22996682
+fn main() {
+    input! {
+        n: usize,
+        p: [(i64, i64); n]
     }
 
-}
-
-impl PartialOrd for Point {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
+    let mut ppp = vec![];
+    for (i, pi) in p.iter().enumerate() {
+        ppp.push((pi.0, pi.1, i));
     }
-}
 
+    // [memo] max(|xi-xj|, |yi-yj|) can be decomposed to
+    //        max(max(|xi-xj), max(|yi-yj|)) since each element of
+    //        arguments passed to max is independent.
+    let mut xp = ppp.clone();
+    xp.sort_by(|p1, p2| p1.0.cmp(&p2.0));
 
-fn solve(_: i64, points: Vec::<(i64, i64)>) {
-    let mut queue = std::collections::BinaryHeap::new();
-    for i in 0..points.len() {
-        for j in i..points.len() {
-            if i == j {
-                continue
-            }
-            let dist = std::cmp::max((points[i].0 - points[j].0).abs(), (points[i].1 - points[j].1).abs());
-            let p = Point { p1: points[i], p2: points[j], dist };
-            queue.push(p);
+    let mut yp = ppp;
+    yp.sort_by(|p1, p2| p1.1.cmp(&p2.1));
+
+    // [memo] it uses HashSet to overwrite same point pair?
+    let mut pp = HashSet::new();
+    for i in 0..=(2.min(xp.len())) {
+        pp.insert(&xp[i]);
+        pp.insert(&yp[i]);
+        pp.insert(&xp[xp.len() - 1 - i]);
+        pp.insert(&yp[yp.len() - 1 - i]);
+    }
+
+    // [memo] O(N^2) distance calculation for the small set of points
+    let pv: Vec<&(i64, i64, usize)> = pp.into_iter().collect();
+    let mut ll = vec![];
+    for i in 0..(pv.len() - 1) {
+        for j in (i + 1)..pv.len() {
+            let l = (pv[i].0 - pv[j].0).abs().max((pv[i].1 - pv[j].1).abs());
+            ll.push(l);
         }
     }
 
-    queue.pop();
-    let point = queue.pop().unwrap();
-    println!("{}", point.dist);
-}
-
-
-fn main() {
-    input! {
-        n: i64,
-        points: [(i64, i64); n],
-    }
-
-    solve(n, points);
+    ll.sort_unstable();
+    println!("{}", ll[ll.len() - 2]);
 }
