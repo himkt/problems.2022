@@ -1,3 +1,13 @@
+use proconio::input;
+
+
+fn solve() {
+}
+
+
 fn main() {
-    unimplemented!();
+    input! {
+    }
+
+    solve();
 }
