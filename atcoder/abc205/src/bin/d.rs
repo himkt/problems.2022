@@ -61,7 +61,7 @@ fn main() {
 
     for qi in q.iter() {
         let mut low = 1e0 as i64;
-        let mut upp = 1e18 as i64;
+        let mut upp = 2e18 as i64;
 
         while low != upp {
             // println!("{}, {}", low, upp);
