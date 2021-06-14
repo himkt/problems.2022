@@ -64,10 +64,8 @@ fn main() {
         let mut upp = 2e18 as i64;
 
         while low != upp {
-            // println!("{}, {}", low, upp);
             let mid = (low+upp) / 2;
             let a_min_index = a.lower_bound(&mid) as i64;
-            // println!("a_min_index: {}", a_min_index);
 
             if &(mid - a_min_index) == qi && !ah.contains(&mid) {
                 low = mid;
@@ -81,6 +79,5 @@ fn main() {
             }
         }
         println!("{}", low);
-        // println!("q: {} => {}, {}", qi, low, upp);
     }
 }
