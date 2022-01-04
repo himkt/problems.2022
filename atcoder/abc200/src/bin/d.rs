@@ -30,17 +30,22 @@ impl<T: Copy> Iterator for Bitset<T> {
 
 pub fn bitset<T: Copy>(a: Vec<T>) -> Bitset<T> {
     let len = a.len();
-    Bitset { curr: 0, array: a, len }
+    Bitset { curr: 1, array: a, len }
 }
 
-fn solve(_: i64, a: Vec<i64>) {
+fn main() {
+    input! {
+        n: usize,
+        a: [usize; n],
+    }
+
     let mut arr: Vec<Vec<Vec<usize>>> = vec![vec![]; 200];
     let min_v = std::cmp::min(8, a.len());
     let arange: Vec<usize> = (0..min_v).collect();
 
     let bitset = bitset(arange);
     for candidate in bitset {
-        let sum: i64 = candidate.iter().map(|idx| a[*idx] % 200).sum();
+        let sum: usize = candidate.iter().map(|&idx| a[idx] % 200).sum();
         arr[(sum % 200) as usize].push(candidate.to_vec());
     }
 
@@ -56,12 +61,4 @@ fn solve(_: i64, a: Vec<i64>) {
     }
 
     println!("No");
-}
-
-fn main() {
-    input! {
-        n: i64,
-        a: [i64; n],
-    }
-    solve(n, a);
 }
