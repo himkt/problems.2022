@@ -52,10 +52,10 @@ fn main() {
     for _arr in arr {
         if _arr.len() >= 2 {
             println!("Yes");
-            let s0 = _arr[0].iter().map(|item| (1+item).to_string()).collect::<Vec<String>>();
-            println!("{} {:}", _arr[0].len(), s0.join(" "));
-            let s1 = _arr[1].iter().map(|item| (1+item).to_string()).collect::<Vec<String>>();
-            println!("{} {:}", _arr[1].len(), s1.join(" "));
+            let b: Vec<_> = _arr[0].iter().map(|item| (1+item).to_string()).collect();
+            let c: Vec<_> = _arr[1].iter().map(|item| (1+item).to_string()).collect();
+            println!("{} {:}", b.len(), b.join(" "));
+            println!("{} {:}", c.len(), c.join(" "));
             return;
         }
     }
