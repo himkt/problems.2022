@@ -1,25 +1,62 @@
-#[allow(clippy::needless_range_loop)]
+pub trait BinarySearch<T> {
+    fn lower_bound(&self, k: usize, p: usize) -> usize;
+}
+
+
+impl<T: Ord> BinarySearch<T> for [T] {
+    fn lower_bound(&self, k: usize, p: usize) -> usize {
+        let mut left  = 0;
+        let mut right = self.len();
+
+        // update here
+        let check = |mid| {
+            k * mid <= p
+        };
+
+        while left < right {
+            let mid = left + (right - left) / 2;
+
+            if check(mid) {
+                right = mid;
+            }
+            else {
+                left = mid + 1;
+            }
+
+        }
+
+        left
+    }
+}
+
+
+#[allow(clippy::many_single_char_names)]
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
     let k: usize = scanner.cin();
+    let a: Vec<usize> = scanner.vec(n);
 
-    let mut a: Vec<Vec<usize>> = vec![vec![0; n]; n];
-    for i in 0..n {
-        let ai: Vec<usize> = scanner.vec(n);
-        a[i] = ai;
+    let mut l: usize = 0;
+    let mut r: usize = n + 1;
+
+    while l < r {
+        let num_projects = l + (r - l) / 2;
+
+        let mut capacity: usize = 0;
+        for &ai in &a {
+            capacity += ai.min(num_projects);
+        }
+
+        if capacity >= num_projects * k {
+            r = num_projects;
+        }
+        else {
+            l = num_projects + 1;
+        }
     }
 
-    let mut left:  usize = 1;
-    let mut right: usize = 1_000_000_000;
-    let mut mid:   usize = (left + right) / 2;
-
-    while left < right {
-        mid = (left + right) / 2;
-
-        left = mid;
-        right = mid;
-    }
+    println!("{}", l);
 }
 
 

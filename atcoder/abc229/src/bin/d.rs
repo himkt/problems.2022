@@ -1,31 +1,38 @@
-#[allow(clippy::needless_range_loop)]
+#[allow(clippy::branches_sharing_code)]
 fn main() {
     let mut scanner = Scanner::new();
-    let n: usize = scanner.cin();
+    let s: String = scanner.cin();
+    let s: Vec<char> = s.chars().collect();
     let k: usize = scanner.cin();
+    let n: usize = s.len();
 
-    let mut a: Vec<Vec<usize>> = vec![vec![0; n]; n];
-    for i in 0..n {
-        let ai: Vec<usize> = scanner.vec(n);
-        a[i] = ai;
+    let mut cumnum: Vec<usize> = vec![0; n+1];
+    for i in 1..=n {
+        if s[i-1] == '.' {
+            cumnum[i] = cumnum[i-1] + 1;
+        }
+        else {
+            cumnum[i] = cumnum[i-1];
+        }
     }
 
-    let mut left:  usize = 1;
-    let mut right: usize = 1_000_000_000;
-    let mut mid:   usize = (left + right) / 2;
+    let mut ans: usize = 0;
+    let mut r: usize = 1;
+    for l in 1..=n {
+        while r < cumnum.len() && cumnum[r] <= cumnum[l-1] + k {
+            r += 1;
+        }
 
-    while left < right {
-        mid = (left + right) / 2;
-
-        left = mid;
-        right = mid;
+        ans = ans.max(r - l);
     }
+
+    println!("{}", ans);
 }
 
 
 use std::io::{self, Write};
 use std::str::FromStr;
-use std::collections::VecDeque;
+use std::collections::{VecDeque};
 
 #[allow(dead_code)]
 struct Scanner {

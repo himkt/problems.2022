@@ -2,14 +2,11 @@ use proconio::input;
 use std::collections::VecDeque;
 
 
-const INF: usize = 1001001001;
-
-
 #[derive(Debug,Clone)]
 pub struct BFS {
     graph: Vec<Vec<usize>>,
     seen: Vec<bool>,
-    dist: Vec<usize>,
+    colors: Vec<usize>,
 }
 
 
@@ -19,7 +16,7 @@ impl BFS {
         Self {
             graph,
             seen: vec![false; n],
-            dist: vec![INF; n],
+            colors: vec![0; n],
         }
     }
 
@@ -28,21 +25,23 @@ impl BFS {
         queue.push_back((root, 0));
 
         while !queue.is_empty() {
-            let (cur, dist) = queue.pop_front().unwrap();
+            let (cur, color) = queue.pop_front().unwrap();
+            self.colors[cur] = color;
+
             if self.seen[cur] {
                 continue;
             }
 
             self.seen[cur] = true;
-            self.dist[cur] = self.dist[cur].min(dist);
             for &next in &self.graph[cur] {
-                queue.push_back((next, self.dist[cur] + 1));
+                queue.push_back((next, (color + 1) % 2));
             }
         }
     }
 }
 
 
+#[allow(clippy::needless_range_loop)]
 fn main() {
     input! {
         n: usize,
@@ -57,15 +56,11 @@ fn main() {
         graph[t-1].push(s-1);
     }
 
-    let mut dist: Vec<Vec<usize>> = vec![vec![]; n];
-    for s in 0..n {
-        let mut bfs = BFS::new(graph.clone());
-        bfs.search(s);
-        dist[s] = bfs.dist;
-    }
+    let mut bfs = BFS::new(graph);
+    bfs.search(0);
 
-    for (s, t) in queries {
-        if dist[s-1][t-1] % 2 == 0 {
+    for (c, d) in queries {
+        if bfs.colors[c-1] == bfs.colors[d-1] {
             println!("Town");
         }
         else {
