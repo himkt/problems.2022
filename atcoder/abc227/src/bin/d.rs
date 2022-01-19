@@ -1,62 +1,45 @@
-pub trait BinarySearch<T> {
-    fn lower_bound(&self, k: usize, p: usize) -> usize;
-}
+pub fn lower_bound(range: std::ops::Range<usize>, prop: &dyn Fn(usize) -> bool) -> usize {
+    if prop(range.start) {
+        range.start
+    }
+    else {
+        let mut ng = range.start;
+        let mut ok = range.end;
 
+        while ok - ng > 1 {
+            let middle = ng + (ok - ng) / 2;
 
-impl<T: Ord> BinarySearch<T> for [T] {
-    fn lower_bound(&self, k: usize, p: usize) -> usize {
-        let mut left  = 0;
-        let mut right = self.len();
-
-        // update here
-        let check = |mid| {
-            k * mid <= p
-        };
-
-        while left < right {
-            let mid = left + (right - left) / 2;
-
-            if check(mid) {
-                right = mid;
+            if prop(middle) {
+                ok = middle;
             }
             else {
-                left = mid + 1;
+                ng = middle;
             }
-
         }
 
-        left
+        ok
     }
 }
 
 
-#[allow(clippy::many_single_char_names)]
+#[allow(clippy::many_single_char_names,clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
     let k: usize = scanner.cin();
     let a: Vec<usize> = scanner.vec(n);
 
-    let mut l: usize = 0;
-    let mut r: usize = n + 1;
-
-    while l < r {
-        let num_projects = l + (r - l) / 2;
-
-        let mut capacity: usize = 0;
+    let max = 1_000_000_000_000_000_000 + 1;
+    let ans = lower_bound(0..max, &|x| {
+        let mut p = 0;
         for &ai in &a {
-            capacity += ai.min(num_projects);
+            p += ai.min(x);
         }
 
-        if capacity >= num_projects * k {
-            r = num_projects;
-        }
-        else {
-            l = num_projects + 1;
-        }
-    }
+        p < k * x
+    });
 
-    println!("{}", l);
+    println!("{}", ans - 1);
 }
 
 
