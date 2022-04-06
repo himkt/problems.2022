@@ -1,47 +1,25 @@
-const INF: i64 = 1e18 as i64;
-
-
-#[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
     let h: usize = scanner.cin();
     let w: usize = scanner.cin();
-    let c: i64 = scanner.cin();
 
-    let mut a: Vec<Vec<i64>> = vec![vec![0; w]; h];
+    let mut a: Vec<Vec<usize>> = vec![vec![0; w]; h];
     for i in 0..h {
-        let ai: Vec<i64> = scanner.vec(w);
+        let ai: Vec<usize> = scanner.vec(w);
         a[i] = ai;
     }
 
-    let mut ans: i64 = INF;
-
-    for _ in 0..2 {
-        let mut dp: Vec<Vec<i64>> = vec![vec![INF; w]; h];
-        for i in 0..h {
-            for j in 0..w {
-                if i > 0 {
-                    dp[i][j] = dp[i][j].min(dp[i-1][j]);
-                }
-                if j > 0 {
-                    dp[i][j] = dp[i][j].min(dp[i][j-1]);
-                }
-
-                let i_i64 = i as i64;
-                let j_i64 = j as i64;
-
-                ans = ans.min(a[i][j]+(i_i64+j_i64)*c+dp[i][j]);
-                dp[i][j] = ans.min(dp[i][j].min(a[i][j]-(i_i64+j_i64)*c));
-            }
+    let mut b: Vec<Vec<usize>> = vec![vec![0; h]; w];
+    for i in 0..h {
+        for j in 0..w {
+            b[j][i] = a[i][j];
         }
-
-        // (a, b) -> (c, d)
-        // iter0: (a, b) > (c, d)
-        // iter1: (c, d) > (a, b)
-        a.reverse();
     }
 
-    println!("{}", ans);
+    for bi in b {
+        let bci: Vec<String> = bi.iter().map(|x| x.to_string()).collect();
+        println!("{}", bci.join(" "));
+    }
 }
 
 
@@ -72,6 +50,14 @@ impl Scanner {
             }
         }
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
+    }
+
+    fn usize1(&mut self) -> usize {
+        self.cin::<usize>() - 1
+    }
+
+    fn chars(&mut self) -> Vec<char> {
+        self.cin::<String>().chars().collect()
     }
 
     fn vec<T: FromStr>(&mut self, n: usize) -> Vec<T> {

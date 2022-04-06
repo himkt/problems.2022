@@ -1,47 +1,42 @@
-const INF: i64 = 1e18 as i64;
-
-
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
-    let h: usize = scanner.cin();
-    let w: usize = scanner.cin();
-    let c: i64 = scanner.cin();
+    let n: usize = scanner.cin();
+    let a: Vec<usize> = scanner.vec(n);
 
-    let mut a: Vec<Vec<i64>> = vec![vec![0; w]; h];
-    for i in 0..h {
-        let ai: Vec<i64> = scanner.vec(w);
-        a[i] = ai;
-    }
+    let mut c: VecDeque<(usize, usize)> = VecDeque::new();
 
-    let mut ans: i64 = INF;
+    let mut cnt = 0;
+    c.push_front((a[0], 1));
+    cnt += 1;
+    println!("{}", cnt);
+    // println!("{:?}", c);
 
-    for _ in 0..2 {
-        let mut dp: Vec<Vec<i64>> = vec![vec![INF; w]; h];
-        for i in 0..h {
-            for j in 0..w {
-                if i > 0 {
-                    dp[i][j] = dp[i][j].min(dp[i-1][j]);
+    for i in 1..n {
+        if let Some(head) = c.front() {
+            if head.0 == a[i] {
+                if a[i] == head.1 + 1 {
+                    cnt -= head.1;
+                    c.pop_front();
                 }
-                if j > 0 {
-                    dp[i][j] = dp[i][j].min(dp[i][j-1]);
+                else {
+                    cnt += 1;
+                    (*c.front_mut().unwrap()).1 += 1;
                 }
-
-                let i_i64 = i as i64;
-                let j_i64 = j as i64;
-
-                ans = ans.min(a[i][j]+(i_i64+j_i64)*c+dp[i][j]);
-                dp[i][j] = ans.min(dp[i][j].min(a[i][j]-(i_i64+j_i64)*c));
+            }
+            else {
+                cnt += 1;
+                c.push_front((a[i], 1));
             }
         }
+        else {
+            cnt += 1;
+            c.push_front((a[i], 1));
+        }
 
-        // (a, b) -> (c, d)
-        // iter0: (a, b) > (c, d)
-        // iter1: (c, d) > (a, b)
-        a.reverse();
+        println!("{}", cnt);
+        // println!("{:?}", c);
     }
-
-    println!("{}", ans);
 }
 
 

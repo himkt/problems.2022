@@ -1,47 +1,45 @@
-const INF: i64 = 1e18 as i64;
+const INF: usize = 1_000_000_000;
 
 
-#[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
-    let h: usize = scanner.cin();
-    let w: usize = scanner.cin();
-    let c: i64 = scanner.cin();
+    let n: usize = scanner.cin();
+    let x: usize = scanner.cin();
+    let y: usize = scanner.cin();
 
-    let mut a: Vec<Vec<i64>> = vec![vec![0; w]; h];
-    for i in 0..h {
-        let ai: Vec<i64> = scanner.vec(w);
+    let mut a: Vec<usize> = vec![0; n];
+    let mut b: Vec<usize> = vec![0; n];
+    for i in 0..n {
+        let ai: usize = scanner.cin();
+        let bi: usize = scanner.cin();
         a[i] = ai;
+        b[i] = bi;
     }
 
-    let mut ans: i64 = INF;
+    let mut dp: Vec<Vec<Vec<usize>>> = vec![vec![vec![INF; y+1]; x+1]; n];
+    dp[0][0][0] = 0;
+    dp[0][a[0].min(x)][b[0].min(y)] = 1;
 
-    for _ in 0..2 {
-        let mut dp: Vec<Vec<i64>> = vec![vec![INF; w]; h];
-        for i in 0..h {
-            for j in 0..w {
-                if i > 0 {
-                    dp[i][j] = dp[i][j].min(dp[i-1][j]);
-                }
-                if j > 0 {
-                    dp[i][j] = dp[i][j].min(dp[i][j-1]);
+    for i in 0..n-1 {
+        for _x in 0..=x {
+            for _y in 0..=y {
+                if dp[i][_x][_y] == INF {
+                    continue;
                 }
 
-                let i_i64 = i as i64;
-                let j_i64 = j as i64;
+                let nx = (_x + a[i+1]).min(x);
+                let ny = (_y + b[i+1]).min(y);
 
-                ans = ans.min(a[i][j]+(i_i64+j_i64)*c+dp[i][j]);
-                dp[i][j] = ans.min(dp[i][j].min(a[i][j]-(i_i64+j_i64)*c));
+                dp[i+1][_x][_y] = dp[i+1][_x][_y].min(dp[i][_x][_y]);
+                dp[i+1][nx][ny] = dp[i+1][nx][ny].min(dp[i][_x][_y] + 1);
             }
         }
-
-        // (a, b) -> (c, d)
-        // iter0: (a, b) > (c, d)
-        // iter1: (c, d) > (a, b)
-        a.reverse();
     }
 
-    println!("{}", ans);
+    match dp[n-1][x][y] {
+        INF => println!("-1"),
+        v => println!("{}", v),
+    }
 }
 
 

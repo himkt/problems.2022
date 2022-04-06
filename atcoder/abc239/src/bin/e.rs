@@ -1,37 +1,44 @@
+struct Tree {
+    g: Vec<Vec<usize>>,
+    xs: Vec<usize>,
+    children: Vec<Vec<usize>>,
+}
+
+impl Tree {
+    fn new(g: Vec<Vec<usize>>, xs: Vec<usize>) -> Self {
+        let n = xs.len();
+        Tree { g: g, xs: xs, children: vec![vec![]; n] }
+    }
+
+    fn construct(&mut self, node_id: usize) -> Vec<usize> {
+
+    }
+}
+
+
+
+
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
-    let w: usize = scanner.cin();
+    let q: usize = scanner.cin();
 
-    let mut dp: Vec<Vec<usize>> = vec![vec![0; w+1]; n];
-    let mut ws = vec![0; n];
-    let mut vs = vec![0; n];
+    let xs: Vec<usize> = scanner.vec(n);
 
-    for i in 0..n {
-        let _w: usize = scanner.cin();
-        let _v: usize = scanner.cin();
-        ws[i] = _w;
-        vs[i] = _v;
+    let mut g: Vec<Vec<usize>> = vec![vec![]; n];
+    for _ in 0..(n-1) {
+        let a: usize = scanner.cin();
+        let b: usize = scanner.cin();
+        g[a-1].push(b-1);
+        g[b-1].push(a-1);
     }
 
-    for j in 0..=w {
-        if ws[0] <= j {
-            dp[0][j] = vs[0];
-        }
+    for _ in 0..q {
+        let v: usize = scanner.cin();
+        let k: usize = scanner.cin();
     }
 
-    for i in 1..n {
-        for j in 0..=w {
-            if j >= ws[i] {
-                dp[i][j] = dp[i-1][j].max(dp[i-1][j-ws[i]] + vs[i]);
-            }
-            else {
-                dp[i][j] = dp[i-1][j];
-            }
-        }
-    }
-
-    println!("{}", dp[n-1][w]);
+    println!("{:?}", g);
 }
 
 

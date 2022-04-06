@@ -1,41 +1,43 @@
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
-    let w: usize = scanner.cin();
+    let mut ys_by_x: HashMap<usize, Vec<usize>> = HashMap::new();
 
-    let mut dp: Vec<Vec<usize>> = vec![vec![0; w+1]; n];
-    let mut ws = vec![0; n];
-    let mut vs = vec![0; n];
-
-    for i in 0..n {
-        let _w: usize = scanner.cin();
-        let _v: usize = scanner.cin();
-        ws[i] = _w;
-        vs[i] = _v;
+    for _ in 0..n {
+        let x: usize = scanner.cin();
+        let y: usize = scanner.cin();
+        ys_by_x.entry(x).or_insert_with(Vec::new).push(y);
     }
 
-    for j in 0..=w {
-        if ws[0] <= j {
-            dp[0][j] = vs[0];
+    // println!("{:?}", ys_by_x);
+
+    let mut pair_count: HashMap<(usize, usize), usize> = HashMap::new();
+    for (_, mut ys) in ys_by_x.into_iter() {
+        if ys.len() < 2 {
+            continue;
         }
-    }
+        ys.sort_unstable();
 
-    for i in 1..n {
-        for j in 0..=w {
-            if j >= ws[i] {
-                dp[i][j] = dp[i-1][j].max(dp[i-1][j-ws[i]] + vs[i]);
-            }
-            else {
-                dp[i][j] = dp[i-1][j];
+        let m = ys.len();
+        for i in 0..m {
+            for j in i+1..m {
+                *pair_count.entry((ys[i], ys[j])).or_insert(0) += 1;
             }
         }
     }
 
-    println!("{}", dp[n-1][w]);
+    // println!("{:?}", pair_count);
+
+    let mut ans = 0;
+    for v in pair_count.values() {
+        ans += v*(v-1) / 2;
+    }
+
+    println!("{}", ans);
 }
 
 
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashMap};
 use std::io::{self, Write};
 use std::str::FromStr;
 
@@ -62,14 +64,6 @@ impl Scanner {
             }
         }
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
-    }
-
-    fn usize1(&mut self) -> usize {
-        self.cin::<usize>() - 1
-    }
-
-    fn chars(&mut self) -> Vec<char> {
-        self.cin::<String>().chars().collect()
     }
 
     fn vec<T: FromStr>(&mut self, n: usize) -> Vec<T> {

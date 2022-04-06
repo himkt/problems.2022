@@ -1,44 +1,45 @@
-const INF: i64 = 1e18 as i64;
-
-
-#[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
-    let h: usize = scanner.cin();
+    let n: usize = scanner.cin();
+    let l: usize = scanner.cin();
     let w: usize = scanner.cin();
-    let c: i64 = scanner.cin();
+    let mut a: Vec<usize> = scanner.vec(n);
+    a.sort_unstable();
 
-    let mut a: Vec<Vec<i64>> = vec![vec![0; w]; h];
-    for i in 0..h {
-        let ai: Vec<i64> = scanner.vec(w);
-        a[i] = ai;
+    let mut b: Vec<(usize, usize)> = vec![];
+    b.push((0, a[0]));
+
+    let mut c = 0;
+    for ai in a {
+        if c < ai {
+            b.push((c, ai));
+        }
+        c = ai + w;
     }
 
-    let mut ans: i64 = INF;
+    if c < l {
+        b.push((c, l));
+    }
 
-    for _ in 0..2 {
-        let mut dp: Vec<Vec<i64>> = vec![vec![INF; w]; h];
-        for i in 0..h {
-            for j in 0..w {
-                if i > 0 {
-                    dp[i][j] = dp[i][j].min(dp[i-1][j]);
-                }
-                if j > 0 {
-                    dp[i][j] = dp[i][j].min(dp[i][j-1]);
-                }
+    let mut ans = 0;
+    let mut max_covered = 0;
 
-                let i_i64 = i as i64;
-                let j_i64 = j as i64;
+    // println!("{:?}", b);
 
-                ans = ans.min(a[i][j]+(i_i64+j_i64)*c+dp[i][j]);
-                dp[i][j] = ans.min(dp[i][j].min(a[i][j]-(i_i64+j_i64)*c));
-            }
+    for (mut s, t) in b {
+        if s < max_covered {
+            s = max_covered;
         }
 
-        // (a, b) -> (c, d)
-        // iter0: (a, b) > (c, d)
-        // iter1: (c, d) > (a, b)
-        a.reverse();
+        if t <= s {
+            continue;
+        }
+
+        let k = ((t - s) + w - 1) / w;
+        ans += k;
+        // println!("s={}, t={}, k={}", s, t, k);
+
+        max_covered = s + w * k;
     }
 
     println!("{}", ans);
@@ -72,6 +73,14 @@ impl Scanner {
             }
         }
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
+    }
+
+    fn usize1(&mut self) -> usize {
+        self.cin::<usize>() - 1
+    }
+
+    fn chars(&mut self) -> Vec<char> {
+        self.cin::<String>().chars().collect()
     }
 
     fn vec<T: FromStr>(&mut self, n: usize) -> Vec<T> {

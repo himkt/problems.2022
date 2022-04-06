@@ -1,37 +1,37 @@
+const DIV: usize = 998244353;
+const MAX: usize = 3000;
+
+
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
-    let w: usize = scanner.cin();
+    let a: Vec<usize> = scanner.vec(n);
+    let b: Vec<usize> = scanner.vec(n);
 
-    let mut dp: Vec<Vec<usize>> = vec![vec![0; w+1]; n];
-    let mut ws = vec![0; n];
-    let mut vs = vec![0; n];
-
-    for i in 0..n {
-        let _w: usize = scanner.cin();
-        let _v: usize = scanner.cin();
-        ws[i] = _w;
-        vs[i] = _v;
+    let mut dp: Vec<Vec<usize>> = vec![vec![0; MAX+2]; n];
+    for i in a[0]..=b[0] {
+        dp[0][i] = 1;
     }
 
-    for j in 0..=w {
-        if ws[0] <= j {
-            dp[0][j] = vs[0];
+    for t in 1..n {
+
+        for i in 0..=MAX {
+            dp[t-1][i+1] += dp[t-1][i];
+        }
+
+        for i in a[t]..=b[t] {
+            dp[t][i] += dp[t-1][i];
+            dp[t][i] %= DIV;
         }
     }
 
-    for i in 1..n {
-        for j in 0..=w {
-            if j >= ws[i] {
-                dp[i][j] = dp[i-1][j].max(dp[i-1][j-ws[i]] + vs[i]);
-            }
-            else {
-                dp[i][j] = dp[i-1][j];
-            }
-        }
+    let mut ans: usize = 0;
+    for v in dp[n-1].iter() {
+        ans += v;
+        ans %= DIV;
     }
 
-    println!("{}", dp[n-1][w]);
+    println!("{}", ans);
 }
 
 
@@ -62,14 +62,6 @@ impl Scanner {
             }
         }
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
-    }
-
-    fn usize1(&mut self) -> usize {
-        self.cin::<usize>() - 1
-    }
-
-    fn chars(&mut self) -> Vec<char> {
-        self.cin::<String>().chars().collect()
     }
 
     fn vec<T: FromStr>(&mut self, n: usize) -> Vec<T> {

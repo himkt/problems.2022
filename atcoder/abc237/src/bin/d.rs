@@ -1,37 +1,37 @@
 fn main() {
     let mut scanner = Scanner::new();
-    let n: usize = scanner.cin();
-    let w: usize = scanner.cin();
+    let mut n: i64 = scanner.cin();
+    let s: String = scanner.cin();
+    let s: Vec<char> = s.chars().collect();
 
-    let mut dp: Vec<Vec<usize>> = vec![vec![0; w+1]; n];
-    let mut ws = vec![0; n];
-    let mut vs = vec![0; n];
+    let mut a: Vec<i64> = vec![-1; 1_000_001];
+    let c: usize = 500_000;
 
-    for i in 0..n {
-        let _w: usize = scanner.cin();
-        let _v: usize = scanner.cin();
-        ws[i] = _w;
-        vs[i] = _v;
+    let mut l: usize = 0;
+    let mut r: usize = 0;
+
+    a[c] = n;
+    n -= 1;
+
+    for si in s.into_iter().rev() {
+        if si == 'R' {
+            l += 1;
+            a[c-l] = n;
+        }
+        else {
+            r += 1;
+            a[c+r] = n;
+        }
+        n -= 1;
     }
 
-    for j in 0..=w {
-        if ws[0] <= j {
-            dp[0][j] = vs[0];
+    let mut ans = vec![];
+    for ai in a {
+        if ai >= 0 {
+            ans.push(ai.to_string());
         }
     }
-
-    for i in 1..n {
-        for j in 0..=w {
-            if j >= ws[i] {
-                dp[i][j] = dp[i-1][j].max(dp[i-1][j-ws[i]] + vs[i]);
-            }
-            else {
-                dp[i][j] = dp[i-1][j];
-            }
-        }
-    }
-
-    println!("{}", dp[n-1][w]);
+    println!("{}", ans.join(" "));
 }
 
 

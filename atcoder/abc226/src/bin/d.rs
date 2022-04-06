@@ -1,41 +1,42 @@
+pub fn gcd(a: i64, b: i64) -> i64 {
+    if b == 0 {
+        a
+    } else {
+        gcd(b, a % b)
+    }
+}
+
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
-    let w: usize = scanner.cin();
+    let mut pairs: Vec<(i64, i64)> = vec![];
+    for _ in 0..n {
+        let raw: Vec<i64> = scanner.vec(2);
+        let pair: (i64, i64) = (raw[0], raw[1]);
+        pairs.push(pair);
+    }
 
-    let mut dp: Vec<Vec<usize>> = vec![vec![0; w+1]; n];
-    let mut ws = vec![0; n];
-    let mut vs = vec![0; n];
+    pairs.sort_unstable();
+    let mut paths: HashSet<(i64, i64)> = HashSet::new();
 
     for i in 0..n {
-        let _w: usize = scanner.cin();
-        let _v: usize = scanner.cin();
-        ws[i] = _w;
-        vs[i] = _v;
-    }
+        for j in i+1..n {
+            let pi = pairs[i];
+            let pj = pairs[j];
 
-    for j in 0..=w {
-        if ws[0] <= j {
-            dp[0][j] = vs[0];
+            let path = (pj.0 - pi.0, pj.1 - pi.1);
+            let gcd = gcd(path.0, path.1);
+            let path_shrinked = (path.0 / gcd, path.1 / gcd);
+            paths.insert(path_shrinked);
         }
     }
 
-    for i in 1..n {
-        for j in 0..=w {
-            if j >= ws[i] {
-                dp[i][j] = dp[i-1][j].max(dp[i-1][j-ws[i]] + vs[i]);
-            }
-            else {
-                dp[i][j] = dp[i-1][j];
-            }
-        }
-    }
-
-    println!("{}", dp[n-1][w]);
+    let ans = 2 * paths.len();
+    println!("{}", ans);
 }
 
 
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashSet};
 use std::io::{self, Write};
 use std::str::FromStr;
 

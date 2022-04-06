@@ -1,37 +1,14 @@
 fn main() {
     let mut scanner = Scanner::new();
-    let n: usize = scanner.cin();
-    let w: usize = scanner.cin();
+    let n: f64 = scanner.cin();
+    let t = 2usize.pow(31) as f64;
 
-    let mut dp: Vec<Vec<usize>> = vec![vec![0; w+1]; n];
-    let mut ws = vec![0; n];
-    let mut vs = vec![0; n];
-
-    for i in 0..n {
-        let _w: usize = scanner.cin();
-        let _v: usize = scanner.cin();
-        ws[i] = _w;
-        vs[i] = _v;
+    if -t <= n && n < t {
+        println!("Yes");
     }
-
-    for j in 0..=w {
-        if ws[0] <= j {
-            dp[0][j] = vs[0];
-        }
+    else {
+        println!("No");
     }
-
-    for i in 1..n {
-        for j in 0..=w {
-            if j >= ws[i] {
-                dp[i][j] = dp[i-1][j].max(dp[i-1][j-ws[i]] + vs[i]);
-            }
-            else {
-                dp[i][j] = dp[i-1][j];
-            }
-        }
-    }
-
-    println!("{}", dp[n-1][w]);
 }
 
 

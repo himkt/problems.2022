@@ -1,41 +1,32 @@
 fn main() {
     let mut scanner = Scanner::new();
-    let n: usize = scanner.cin();
-    let w: usize = scanner.cin();
+    let l: usize = scanner.cin();
+    let q: usize = scanner.cin();
 
-    let mut dp: Vec<Vec<usize>> = vec![vec![0; w+1]; n];
-    let mut ws = vec![0; n];
-    let mut vs = vec![0; n];
+    let mut btree_set: BTreeSet<usize> = BTreeSet::new();
+    btree_set.insert(0);
+    btree_set.insert(l);
 
-    for i in 0..n {
-        let _w: usize = scanner.cin();
-        let _v: usize = scanner.cin();
-        ws[i] = _w;
-        vs[i] = _v;
-    }
+    for _ in 0..q {
+        let c: usize = scanner.cin();
+        let x: usize = scanner.cin();
 
-    for j in 0..=w {
-        if ws[0] <= j {
-            dp[0][j] = vs[0];
+        match c {
+            1 => {
+                btree_set.insert(x);
+            },
+            2 => {
+                let lower_bound = btree_set.range(..x).rev().next().unwrap();
+                let upper_bound = btree_set.range(x..).next().unwrap();
+                println!("{}", upper_bound - lower_bound);
+            },
+            _ => panic!(),
         }
     }
-
-    for i in 1..n {
-        for j in 0..=w {
-            if j >= ws[i] {
-                dp[i][j] = dp[i-1][j].max(dp[i-1][j-ws[i]] + vs[i]);
-            }
-            else {
-                dp[i][j] = dp[i-1][j];
-            }
-        }
-    }
-
-    println!("{}", dp[n-1][w]);
 }
 
 
-use std::collections::VecDeque;
+use std::collections::{VecDeque, BTreeSet};
 use std::io::{self, Write};
 use std::str::FromStr;
 
@@ -62,14 +53,6 @@ impl Scanner {
             }
         }
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
-    }
-
-    fn usize1(&mut self) -> usize {
-        self.cin::<usize>() - 1
-    }
-
-    fn chars(&mut self) -> Vec<char> {
-        self.cin::<String>().chars().collect()
     }
 
     fn vec<T: FromStr>(&mut self, n: usize) -> Vec<T> {

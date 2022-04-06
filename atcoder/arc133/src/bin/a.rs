@@ -1,41 +1,50 @@
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
-    let w: usize = scanner.cin();
+    let a: Vec<usize> = scanner.vec(n);
 
-    let mut dp: Vec<Vec<usize>> = vec![vec![0; w+1]; n];
-    let mut ws = vec![0; n];
-    let mut vs = vec![0; n];
+    let a2: HashSet<usize> = a.clone().into_iter().collect();
+    let mut a2: Vec<usize> = a2.into_iter().collect();
+    a2.sort();
 
-    for i in 0..n {
-        let _w: usize = scanner.cin();
-        let _v: usize = scanner.cin();
-        ws[i] = _w;
-        vs[i] = _v;
-    }
+    let mut s: HashSet<usize> = HashSet::new();
 
-    for j in 0..=w {
-        if ws[0] <= j {
-            dp[0][j] = vs[0];
+    for &ak in a2.iter().rev() {
+        s.insert(ak);
+        if s.len() > 2 {
+            break;
         }
     }
 
-    for i in 1..n {
-        for j in 0..=w {
-            if j >= ws[i] {
-                dp[i][j] = dp[i-1][j].max(dp[i-1][j-ws[i]] + vs[i]);
-            }
-            else {
-                dp[i][j] = dp[i-1][j];
-            }
+    let mut cursor = 0;
+    for &ak in &a {
+        if cursor < a2.len() && ak == a2[cursor] {
+            cursor += 1;
+            continue;
+        }
+
+        s.insert(ak);
+        if s.len() > 3 {
+            break;
         }
     }
 
-    println!("{}", dp[n-1][w]);
+    let mut vs = vec![];
+    for target in s {
+        let v: Vec<usize> = a.clone().into_iter().filter(|&ai| ai != target).collect();
+        vs.push(v);
+    }
+
+    vs.sort();
+
+    let v = vs.iter().next().unwrap();
+    let cs: Vec<String> = v.into_iter().map(|&x| x.to_string()).collect();
+    let ans = cs.join(" ");
+    println!("{}", ans);
 }
 
 
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashSet};
 use std::io::{self, Write};
 use std::str::FromStr;
 

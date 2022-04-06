@@ -1,40 +1,69 @@
-fn main() {
-    let mut scanner = Scanner::new();
-    let n: usize = scanner.cin();
-    let w: usize = scanner.cin();
-
-    let mut dp: Vec<Vec<usize>> = vec![vec![0; w+1]; n];
-    let mut ws = vec![0; n];
-    let mut vs = vec![0; n];
-
-    for i in 0..n {
-        let _w: usize = scanner.cin();
-        let _v: usize = scanner.cin();
-        ws[i] = _w;
-        vs[i] = _v;
+pub fn lower_bound(range: std::ops::Range<usize>, prop: &dyn Fn(usize) -> bool) -> usize {
+    if prop(range.start) {
+        range.start
     }
+    else {
+        let mut ng = range.start;
+        let mut ok = range.end;
 
-    for j in 0..=w {
-        if ws[0] <= j {
-            dp[0][j] = vs[0];
-        }
-    }
+        while ok - ng > 1 {
+            let middle = ng + (ok - ng) / 2;
 
-    for i in 1..n {
-        for j in 0..=w {
-            if j >= ws[i] {
-                dp[i][j] = dp[i-1][j].max(dp[i-1][j-ws[i]] + vs[i]);
+            if prop(middle) {
+                ok = middle;
             }
             else {
-                dp[i][j] = dp[i-1][j];
+                ng = middle;
             }
         }
-    }
 
-    println!("{}", dp[n-1][w]);
+        ok
+    }
 }
 
 
+fn main() {
+    let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+
+    let p: Vec<usize> = scanner.vec(n);
+    let mut q: Vec<usize> = vec![0; n+1];
+
+    for i in 0..n {
+        let qi: usize = scanner.cin();
+        q[qi] = i;
+    }
+
+    let mut vs = vec![];
+    for i in 0..n {
+        let mut j = p[i];
+        while j <= n {
+            vs.push((i, q[j]));
+            j += p[i];
+        }
+    }
+
+    vs.sort_unstable_by_key(|&(i1, i2)| (i1, Reverse(i2)));
+
+    let mut lis = vec![];
+    for (_, s) in vs {
+        if lis.is_empty() { lis.push(s); }
+        else {
+            if &s > lis.last().unwrap() {
+                lis.push(s);
+            }
+            else {
+                let i = lower_bound(0..lis.len(), &|x| lis[x] >= s);
+                lis[i] = s;
+            }
+        }
+    }
+
+    println!("{}", lis.len());
+}
+
+
+use std::cmp::Reverse;
 use std::collections::VecDeque;
 use std::io::{self, Write};
 use std::str::FromStr;

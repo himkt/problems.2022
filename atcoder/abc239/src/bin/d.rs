@@ -1,41 +1,56 @@
-fn main() {
-    let mut scanner = Scanner::new();
-    let n: usize = scanner.cin();
-    let w: usize = scanner.cin();
-
-    let mut dp: Vec<Vec<usize>> = vec![vec![0; w+1]; n];
-    let mut ws = vec![0; n];
-    let mut vs = vec![0; n];
-
-    for i in 0..n {
-        let _w: usize = scanner.cin();
-        let _v: usize = scanner.cin();
-        ws[i] = _w;
-        vs[i] = _v;
-    }
-
-    for j in 0..=w {
-        if ws[0] <= j {
-            dp[0][j] = vs[0];
+pub fn prime_sieve(n: usize) -> Vec<bool> {
+    let mut s = vec![true; n];
+    s[0] = false;
+    s[1] = false;
+    for i in 2..n {
+        if i * i > n {
+            break;
         }
-    }
-
-    for i in 1..n {
-        for j in 0..=w {
-            if j >= ws[i] {
-                dp[i][j] = dp[i-1][j].max(dp[i-1][j-ws[i]] + vs[i]);
-            }
-            else {
-                dp[i][j] = dp[i-1][j];
+        if s[i] {
+            for k in 2..(n + i - 1) / i {
+                s[k * i] = false
             }
         }
     }
-
-    println!("{}", dp[n-1][w]);
+    s
 }
 
 
-use std::collections::VecDeque;
+fn main() {
+    let mut scanner = Scanner::new();
+    let a: usize = scanner.cin();
+    let b: usize = scanner.cin();
+    let c: usize = scanner.cin();
+    let d: usize = scanner.cin();
+
+    let ps = prime_sieve(205);
+
+    let mut wins = HashSet::new();
+
+    for k in a..=b {
+        let mut winner = "Takahashi";
+
+        for p in c..=d {
+            let sum = k + p;
+
+            if ps[sum] {
+                winner = "Aoki";
+                break;
+            }
+        }
+        wins.insert(winner);
+    }
+
+    if wins.contains(&"Takahashi") {
+        println!("Takahashi");
+    }
+    else {
+        println!("Aoki");
+    }
+}
+
+
+use std::collections::{VecDeque, HashSet};
 use std::io::{self, Write};
 use std::str::FromStr;
 

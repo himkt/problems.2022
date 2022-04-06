@@ -1,41 +1,30 @@
 fn main() {
     let mut scanner = Scanner::new();
-    let n: usize = scanner.cin();
-    let w: usize = scanner.cin();
+    let x1: i64 = scanner.cin();
+    let y1: i64 = scanner.cin();
+    let x2: i64 = scanner.cin();
+    let y2: i64 = scanner.cin();
 
-    let mut dp: Vec<Vec<usize>> = vec![vec![0; w+1]; n];
-    let mut ws = vec![0; n];
-    let mut vs = vec![0; n];
+    let mut set1 = HashSet::new();
+    let mut set2 = HashSet::new();
 
-    for i in 0..n {
-        let _w: usize = scanner.cin();
-        let _v: usize = scanner.cin();
-        ws[i] = _w;
-        vs[i] = _v;
+    let ds = vec![(1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1), (-1, 2)];
+    for (dx, dy) in ds {
+        set1.insert((x1 + dx, y1 + dy));
+        set2.insert((x2 + dx, y2 + dy));
     }
 
-    for j in 0..=w {
-        if ws[0] <= j {
-            dp[0][j] = vs[0];
-        }
+    let intersection: Vec<_> = set1.intersection(&set2).collect();
+    if intersection.is_empty() {
+        println!("No");
     }
-
-    for i in 1..n {
-        for j in 0..=w {
-            if j >= ws[i] {
-                dp[i][j] = dp[i-1][j].max(dp[i-1][j-ws[i]] + vs[i]);
-            }
-            else {
-                dp[i][j] = dp[i-1][j];
-            }
-        }
+    else {
+        println!("Yes");
     }
-
-    println!("{}", dp[n-1][w]);
 }
 
 
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashSet};
 use std::io::{self, Write};
 use std::str::FromStr;
 

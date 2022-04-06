@@ -1,37 +1,45 @@
 fn main() {
     let mut scanner = Scanner::new();
-    let n: usize = scanner.cin();
-    let w: usize = scanner.cin();
+    let s: String = scanner.cin();
+    let s: Vec<char> = s.chars().collect();
 
-    let mut dp: Vec<Vec<usize>> = vec![vec![0; w+1]; n];
-    let mut ws = vec![0; n];
-    let mut vs = vec![0; n];
-
-    for i in 0..n {
-        let _w: usize = scanner.cin();
-        let _v: usize = scanner.cin();
-        ws[i] = _w;
-        vs[i] = _v;
+    let mut kl: usize = 0;
+    for si in s.clone().into_iter() {
+        if si != 'a' {
+            break;
+        }
+        kl += 1;
     }
 
-    for j in 0..=w {
-        if ws[0] <= j {
-            dp[0][j] = vs[0];
+    let mut kr: usize = 0;
+    for si in s.clone().into_iter().rev() {
+        if si != 'a' {
+            break;
+        }
+        kr += 1;
+    }
+
+    if kl > kr {
+        println!("No");
+        return;
+    }
+
+    let l: Vec<char> = vec!['a'; kr - kl];
+    let a = [l, s].concat();
+
+    let mut f: bool = true;
+    for i in 0..a.len() {
+        if a[i] != a[a.len()-i-1] {
+            f = false;
         }
     }
 
-    for i in 1..n {
-        for j in 0..=w {
-            if j >= ws[i] {
-                dp[i][j] = dp[i-1][j].max(dp[i-1][j-ws[i]] + vs[i]);
-            }
-            else {
-                dp[i][j] = dp[i-1][j];
-            }
-        }
+    if f {
+        println!("Yes");
     }
-
-    println!("{}", dp[n-1][w]);
+    else {
+        println!("No");
+    }
 }
 
 

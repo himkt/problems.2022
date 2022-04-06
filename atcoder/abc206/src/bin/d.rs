@@ -46,40 +46,39 @@ impl UnionFind {
 }
 
 
+const N: usize = 2 * 1e5 as usize + 1;
+
+
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
+    let a: Vec<usize> = scanner.vec(n);
 
-    let mut edges = vec![];
+    let half = n / 2;
+    let mut union_find = UnionFind::new(N);
 
-    for _ in 0..n-1 {
-        let u: usize = scanner.cin();
-        let v: usize = scanner.cin();
-        let w: usize = scanner.cin();
-        edges.push((u-1, v-1, w));
-    }
-
-    edges.sort_unstable_by_key(|&(_, _, cost)| cost);
-
-    let mut ws: HashMap<usize, usize> = HashMap::new();
-    let mut union_find = UnionFind::new(n);
-    for (u, v, w) in edges {
-        let num_u = union_find.size(u);
-        let num_v = union_find.size(v);
-        *ws.entry(w).or_insert(0) += num_u * num_v;
-        union_find.unite(u, v);
+    for i in 0..half {
+        if a[i] != a[n-i-1] {
+            union_find.unite(a[i], a[n-i-1]);
+        }
     }
 
     let mut ans = 0;
-    for (w, freq) in ws {
-        ans += w*freq;
+    let a: HashSet<usize> = a.into_iter().collect();
+
+    for i in a {
+        if i != union_find.find(i) {
+            continue;
+        }
+        // println!("{}", union_find.size(i));
+        ans += union_find.size(i) - 1;
     }
 
     println!("{}", ans);
 }
 
 
-use std::collections::{VecDeque, HashMap};
+use std::collections::{VecDeque, HashSet};
 use std::io::{self, Write};
 use std::str::FromStr;
 

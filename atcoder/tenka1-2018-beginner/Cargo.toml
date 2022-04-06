@@ -1,0 +1,12 @@
+[package]
+name = "tenka1-2018-beginner"
+version = "0.1.0"
+edition = "2021"
+
+# dependencies added to new project
+[dependencies]
+proconio = "*"
+
+[profile.release]
+lto = true
+panic = 'abort'
