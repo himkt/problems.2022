@@ -1,44 +1,41 @@
 fn main() {
     let mut scanner = Scanner::new();
-    let _: usize = scanner.cin();
+    let n: usize = scanner.cin();
     let s: String = scanner.cin();
-    let mut s: Vec<char> = s.chars().collect();
 
-    let mut l = 0;
-    let mut r = s.len() - 1;
-
-    while l < r {
-        let mut c = s[l];
-        let mut update = false;
-
-        for i in ((l+1)..=r).rev() {
-            if s[i] < c {
-                update = true;
-                r = i;
-                c = s[i];
-            }
-        }
-
-        if !update {
-            l += 1;
-            continue;
-        }
-
-        // swap
-        let tmp = s[l];
-        s[l] = s[r];
-        s[r] = tmp;
-
-        l += 1;
-        r -= 1;
+    let mut heap = BinaryHeap::new();
+    for (i, c) in s.chars().enumerate() {
+        heap.push((Reverse(c), i));
     }
 
-    let ans: String = s.iter().collect();
+    let mut r = n;
+    let mut ans: Vec<char> = s.chars().collect();
+
+    for (i, ci) in s.chars().enumerate() {
+
+        while !heap.is_empty() {
+            let &(Reverse(cj), j) = heap.peek().unwrap();
+
+            if ci <= cj { break; }
+            heap.pop();
+
+            if i >= j { continue; }
+
+            if cj < ci && j < r {
+                ans.swap(i, j);
+                r = j;
+                break;
+            }
+        }
+    }
+
+    let ans: String = ans.iter().collect();
     println!("{}", ans);
 }
 
 
-use std::collections::VecDeque;
+use std::cmp::Reverse;
+use std::collections::{VecDeque, BinaryHeap};
 use std::io::{self, Write};
 use std::str::FromStr;
 
@@ -50,10 +47,7 @@ struct Scanner {
 #[allow(dead_code)]
 impl Scanner {
     fn new() -> Self {
-        Self {
-            stdin: io::stdin(),
-            buffer: VecDeque::new(),
-        }
+        Self { stdin: io::stdin(), buffer: VecDeque::new() }
     }
 
     fn cin<T: FromStr>(&mut self) -> T {
@@ -65,14 +59,6 @@ impl Scanner {
             }
         }
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
-    }
-
-    fn usize1(&mut self) -> usize {
-        self.cin::<usize>() - 1
-    }
-
-    fn chars(&mut self) -> Vec<char> {
-        self.cin::<String>().chars().collect()
     }
 
     fn vec<T: FromStr>(&mut self, n: usize) -> Vec<T> {
