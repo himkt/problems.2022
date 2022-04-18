@@ -1,26 +1,28 @@
+#[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
-
     let n: usize = scanner.cin();
-    let d: i64 = scanner.cin();
+    let d: usize = scanner.cin();
 
-    let mut xys: Vec<(i64, i64)> = vec![];
-    for _ in 0..n {
-        let l: i64 = scanner.cin();
-        let r: i64 = scanner.cin();
-        xys.push((l-1, r-1));
-    }
-    xys.sort_by(|&(_, ay), &(_, by)| ay.cmp(&by));
+    let mut lrs: Vec<(usize, usize)> = (0..n)
+        .map(|_| {
+            let l: usize = scanner.cin();
+            let r: usize = scanner.cin();
+            (l, r)
+        })
+        .collect();
 
-    let mut ans = 0;
-    let mut c: i64 = i64::MIN;
+    lrs.sort_by_key(|&(_, r)| r);
 
-    for &(l, r) in &xys {
-        if c + d > l {
+    let mut ans: usize = 1;
+    let mut prev = lrs[0].1;
+
+    for i in 1..n {
+        if lrs[i].0 < prev + d {
             continue;
         }
-        c = r;
         ans += 1;
+        prev = lrs[i].1;
     }
 
     println!("{}", ans);
