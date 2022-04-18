@@ -1,18 +1,28 @@
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
-    let n: usize = scanner.cin();
-    let k: usize = scanner.cin();
+    let h: usize = scanner.cin();
+    let w: usize = scanner.cin();
+
+    let mut ps: Vec<Vec<char>> = vec![vec!['.'; w]; h];
+
+    for i in 0..h {
+        let s: String = scanner.cin();
+        let cs: Vec<char> = s.chars().collect();
+        ps[i] = cs;
+    }
 
     let mut ans = 0;
-
-    for b in (k+1)..=n {
-        let p = n / b;
-        let q = n - p * b;
-
-        ans += p * (b - k);
-        if q >= k {
-            ans += q.min(q - k + 1);
+    for i in 0..h-1 {
+        for j in 0..w-1 {
+            let mut cnt = 0;
+            if ps[i][j] == '#' { cnt += 1; }
+            if ps[i+1][j] == '#' { cnt += 1; }
+            if ps[i][j+1] == '#' { cnt += 1; }
+            if ps[i+1][j+1] == '#' { cnt += 1; }
+            if cnt == 1 || cnt == 3 {
+                ans += 1;
+            }
         }
     }
 

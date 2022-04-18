@@ -1,19 +1,41 @@
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
-    let n: usize = scanner.cin();
-    let k: usize = scanner.cin();
+    let s: String = scanner.cin();
+    let cs: Vec<char> = s.chars().collect();
+    let n: usize = cs.len();
+
+    let mut prev = cs[0];
+    let mut acnt: usize = 0;
+
+    if cs[0] == 'A' {
+        acnt += 1;
+    }
 
     let mut ans = 0;
 
-    for b in (k+1)..=n {
-        let p = n / b;
-        let q = n - p * b;
-
-        ans += p * (b - k);
-        if q >= k {
-            ans += q.min(q - k + 1);
+    for i in 1..n {
+        match cs[i] {
+            'A' => {
+                if prev == 'A' { acnt += 1; }
+                else { acnt = 1; }
+            },
+            'B' => {
+                if prev == 'A' { }
+                else { acnt = 0; }
+            },
+            'C' => {
+                if prev == 'B' {
+                    ans += acnt;
+                    prev = 'A';
+                    continue;
+                }
+                else { acnt = 0; }
+            },
+            _ => panic!(),
         }
+
+        prev = cs[i];
     }
 
     println!("{}", ans);

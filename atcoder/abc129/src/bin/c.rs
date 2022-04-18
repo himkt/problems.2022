@@ -1,22 +1,43 @@
+const DIV: i64 = 1_000_000_007;
+
+
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
-    let k: usize = scanner.cin();
+    let m: usize = scanner.cin();
 
-    let mut ans = 0;
+    let mut b: Vec<i64> = vec![0; n];
+    for _ in 0..m {
+        let ai: usize = scanner.cin();
+        let ai = ai - 1;
+        b[ai] = -1;
+    }
 
-    for b in (k+1)..=n {
-        let p = n / b;
-        let q = n - p * b;
+    if n == 1 && m == 0 {
+        println!("1");
+        return;
+    }
 
-        ans += p * (b - k);
-        if q >= k {
-            ans += q.min(q - k + 1);
+    if b[0] != -1 { b[0] = 1; }
+    if b[1] != -1 { b[1] = 1; }
+
+    for i in 0..n {
+        // println!("i={}, {:?}", i, b);
+        if b[i] == -1 { continue; }
+
+        if i+1 < n && b[i+1] != -1 {
+            b[i+1] += b[i];
+            b[i+1] %= DIV;
+        }
+        if i+2 < n && b[i+2] != -1 {
+            b[i+2] += b[i];
+            b[i+2] %= DIV;
         }
     }
 
-    println!("{}", ans);
+    let ans = b[n-1] % DIV;
+    println!("{:?}", ans);
 }
 
 

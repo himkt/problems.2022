@@ -2,17 +2,29 @@
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
-    let k: usize = scanner.cin();
+    let m: usize = scanner.cin();
+    let a: Vec<usize> = scanner.vec(n);
 
-    let mut ans = 0;
+    let mut counter: HashMap<usize, usize> = HashMap::new();
+    for i in 0..m {
+        *counter.entry(a[i]).or_insert(0) += 1;
+    }
 
-    for b in (k+1)..=n {
-        let p = n / b;
-        let q = n - p * b;
+    let mut ans = 1_500_000;
+    for i in 0..=ans {
+        if !counter.contains_key(&i) {
+            ans = i;
+            break;
+        }
+    }
 
-        ans += p * (b - k);
-        if q >= k {
-            ans += q.min(q - k + 1);
+    for i in m..n {
+        *counter.entry(a[i-m]).or_insert(0) -= 1;
+        *counter.entry(a[i]).or_insert(0) += 1;
+
+        if counter.get(&a[i-m]).unwrap() == &0 {
+            ans = ans.min(a[i-m]);
+            counter.remove(&a[i-m]);
         }
     }
 
@@ -20,7 +32,7 @@ fn main() {
 }
 
 
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashMap};
 use std::io::{self, Write};
 use std::str::FromStr;
 
