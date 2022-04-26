@@ -1,9 +1,57 @@
 fn main() {
     let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+    let mut k: usize = scanner.cin();
+    let a: Vec<usize> = scanner.vec(n);
+
+    let mut heap = BinaryHeap::new();
+    for ai in a { heap.push(ai); }
+
+    let mut ans = 0;
+    let mut t = 0;
+
+    loop {
+        if heap.is_empty() { break; }
+
+        let v = heap.pop().unwrap();
+        t += 1;
+
+        while let Some(&nv) = heap.peek() {
+            if nv != v {
+                break;
+            }
+
+            heap.pop();
+            t += 1;
+        }
+
+        let d = if heap.is_empty() {
+            v
+        }
+        else {
+            v - heap.peek().unwrap()
+        };
+
+        if k >= t * d {
+            let s = d * (2*v - d + 1) / 2;
+            ans += t * s;
+            k -= t * d;
+        }
+        else {
+            let p = k / t;
+            let q = k - p * t;
+
+            ans += t * p * (2*v - p + 1) / 2;
+            ans += q * (v - p);
+            break;
+        }
+    }
+
+    println!("{}", ans);
 }
 
 
-use std::collections::VecDeque;
+use std::collections::{VecDeque, BinaryHeap};
 use std::io::{self, Write};
 use std::str::FromStr;
 
