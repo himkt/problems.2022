@@ -1,48 +1,98 @@
-use proconio::input;
-use std::collections::HashSet;
-
-
-// Replicate the existing submission line-by-line
-// ref. https://atcoder.jp/contests/arc121/submissions/22996682
-fn main() {
-    input! {
-        n: usize,
-        p: [(i64, i64); n]
+pub fn lower_bound(range: std::ops::Range<usize>, prop: &dyn Fn(usize) -> bool) -> usize {
+    if prop(range.start) {
+        range.start
     }
+    else {
+        let mut ng = range.start;
+        let mut ok = range.end;
 
-    let mut ppp = vec![];
-    for (i, pi) in p.iter().enumerate() {
-        ppp.push((pi.0, pi.1, i));
-    }
+        while ok - ng > 1 {
+            let middle = ng + (ok - ng) / 2;
 
-    // [memo] max(|xi-xj|, |yi-yj|) can be decomposed to
-    //        max(max(|xi-xj), max(|yi-yj|)) since each element of
-    //        arguments passed to max is independent.
-    let mut xp = ppp.clone();
-    xp.sort_by(|p1, p2| p1.0.cmp(&p2.0));
-
-    let mut yp = ppp;
-    yp.sort_by(|p1, p2| p1.1.cmp(&p2.1));
-
-    // [memo] it uses HashSet to overwrite same point pair?
-    let mut pp = HashSet::new();
-    for i in 0..=(2.min(xp.len())) {
-        pp.insert(&xp[i]);
-        pp.insert(&yp[i]);
-        pp.insert(&xp[xp.len() - 1 - i]);
-        pp.insert(&yp[yp.len() - 1 - i]);
-    }
-
-    // [memo] O(N^2) distance calculation for the small set of points
-    let pv: Vec<&(i64, i64, usize)> = pp.into_iter().collect();
-    let mut ll = vec![];
-    for i in 0..(pv.len() - 1) {
-        for j in (i + 1)..pv.len() {
-            let l = (pv[i].0 - pv[j].0).abs().max((pv[i].1 - pv[j].1).abs());
-            ll.push(l);
+            if prop(middle) {
+                ok = middle;
+            }
+            else {
+                ng = middle;
+            }
         }
+
+        ok
+    }
+}
+
+
+#[allow(clippy::needless_range_loop)]
+fn main() {
+    let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+    let mut points = vec![];
+
+    for i in 0..n {
+        let x: i64 = scanner.cin();
+        let y: i64 = scanner.cin();
+        points.push((x, y, i));
     }
 
-    ll.sort_unstable();
-    println!("{}", ll[ll.len() - 2]);
+    let mut points_by_x = points.clone();
+    points_by_x.sort_unstable_by_key(|&(x, _, _)| x);
+
+    let mut points_by_y = points;
+    points_by_y.sort_unstable_by_key(|&(_, y, _)| y);
+
+    let mut vs: Vec<(i64, usize, usize)> = vec![
+        (points_by_x[n-1].0 - points_by_x[0].0, points_by_x[n - 1].2, points_by_x[0].2),
+        (points_by_x[n-1].0 - points_by_x[1].0, points_by_x[n - 1].2, points_by_x[1].2),
+        (points_by_x[n-2].0 - points_by_x[0].0, points_by_x[n - 2].2, points_by_x[0].2),
+        (points_by_x[n-2].0 - points_by_x[1].0, points_by_x[n - 2].2, points_by_x[1].2),
+        (points_by_y[n-1].1 - points_by_y[0].1, points_by_y[n - 1].2, points_by_y[0].2),
+        (points_by_y[n-1].1 - points_by_y[1].1, points_by_y[n - 1].2, points_by_y[1].2),
+        (points_by_y[n-2].1 - points_by_y[0].1, points_by_y[n - 2].2, points_by_y[0].2),
+        (points_by_y[n-2].1 - points_by_y[1].1, points_by_y[n - 2].2, points_by_y[1].2),
+    ];
+
+    vs.sort_unstable_by_key(|&(v, _, _)| Reverse(v));
+
+    let prev_pair = (vs[0].1, vs[0].2);
+
+    for (cost, i, j) in vs {
+        if prev_pair == (i, j) { continue; }
+        println!("{}", cost);
+        break;
+    }
+}
+
+
+use std::cmp::Reverse;
+use std::collections::{VecDeque};
+use std::io::{self, Write};
+use std::str::FromStr;
+
+pub struct Scanner {
+    stdin: io::Stdin,
+    buffer: VecDeque<String>,
+}
+impl Scanner {
+    fn new() -> Self {
+        Self { stdin: io::stdin(), buffer: VecDeque::new() }
+    }
+
+    pub fn cin<T: FromStr>(&mut self) -> T {
+        while self.buffer.is_empty() {
+            let mut line = String::new();
+            let _ = self.stdin.read_line(&mut line);
+            for w in line.split_whitespace() {
+                self.buffer.push_back(String::from(w));
+            }
+        }
+        self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
+    }
+
+    pub fn vec<T: FromStr>(&mut self, n: usize) -> Vec<T> {
+        (0..n).map(|_| self.cin()).collect()
+    }
+}
+
+pub fn flush() {
+    std::io::stdout().flush().unwrap();
 }
