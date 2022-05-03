@@ -1,26 +1,20 @@
-fn f(l: usize, mut x: usize, tot: Vec<usize>, patty: Vec<usize>) -> usize {
-    if l == 0 { return 1; }
+fn patties(n: usize, x: usize, ls: Vec<usize>, ps: Vec<usize>) -> usize {
+    if n == 0 { return 1; }
+    if x == 1 { return 0; }
 
-    if x < 1  {
-        return 0;
-    }
-    x -= 1;
-
-    if x < tot[l-1] {
-        return f(l-1, x, tot, patty);
-    }
-    x -= tot[l-1];
-
-    if x < 1 {
-        return patty[l-1] + 1;
-    }
-    x -= 1;
-
-    if x < tot[l-1] {
-        return patty[l-1] + 1 + f(l-1, x, tot, patty);
+    if 1 < x && x <= ls[n-1] + 1 {
+        return patties(n-1, x-1, ls, ps);
     }
 
-    patty[l]
+    if x == ls[n-1] + 2 {
+        return 1 + ps[n-1];
+    }
+
+    if ls[n-1] + 2 < x {
+        return 1 + ps[n-1] + patties(n-1, x-ls[n-1]-2, ls, ps);
+    }
+
+    0
 }
 
 
@@ -29,21 +23,15 @@ fn main() {
     let n: usize = scanner.cin();
     let x: usize = scanner.cin();
 
-    let mut tot: Vec<usize> = vec![0; 51];
-    tot[0] = 1;
+    let mut ls: Vec<usize> = vec![1; n+1];
+    let mut ps: Vec<usize> = vec![1; n+1];
 
-    for t in 1..=50 {
-        tot[t] = 2*tot[t-1] + 3;
+    for i in 0..n {
+        ls[i+1] = 2 * ls[i] + 3;
+        ps[i+1] = 2 * ps[i] + 1;
     }
 
-    let mut patty: Vec<usize> = vec![0; 51];
-    patty[0] = 1;
-
-    for t in 1..=50 {
-        patty[t] = 2*patty[t-1] + 1;
-    }
-
-    let ans = f(n, x-1, tot, patty);
+    let ans = patties(n, x, ls, ps);
     println!("{}", ans);
 }
 
