@@ -1,4 +1,4 @@
-const INF: usize = 1e10 as usize;
+const INF: usize = 1_000_000_007;
 
 
 pub fn lower_bound(range: std::ops::Range<usize>, prop: &dyn Fn(usize) -> bool) -> usize {
@@ -32,33 +32,38 @@ fn main() {
     let k: usize = scanner.cin();
     let a: Vec<usize> = scanner.vec(n);
 
-    let mut b0 = vec![];
-    let mut max = 0;
-
-    for i in k..n {
-        if a[i] > max {
-            b0.push((a[i], i));
-            max = a[i];
-        }
-    }
-
-    b0.sort_unstable();
-
     let mut ans = INF;
-    for (i, &ai) in a[0..k].iter().enumerate() {
-        let f = |x: usize| ai < b0[x].0;
-        let lower_bound_i = lower_bound(0..b0.len(), &f);
-        if b0.len() == lower_bound_i { continue; }
 
-        let j = b0[lower_bound_i].1;
-        ans = ans.min(j - i);
+    let mut b: Vec<(usize, usize)> = vec![];
+    let mut bmin = 0;
+    for i in k..n {
+        if bmin >= a[i] {
+            continue;
+        }
+
+        b.push((a[i], i));
+        bmin = a[i];
+    }
+    b.sort_unstable();
+
+    let m = b.len();
+    for l in 0..k {
+        let lower = lower_bound(
+            0..m,
+            &|x| b[x].0 > a[l],
+        );
+
+        if lower == m {
+            continue;
+        }
+
+        let (_, r) = b[lower];
+        ans = ans.min(r - l);
     }
 
-    if ans == INF {
-        println!("-1");
-    }
-    else {
-        println!("{}", ans);
+    match ans {
+        INF => println!("-1"),
+        v => println!("{}", v),
     }
 }
 
