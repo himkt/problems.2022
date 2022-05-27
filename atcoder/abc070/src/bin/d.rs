@@ -1,3 +1,46 @@
+pub struct GraphBuilder {
+    pub graph: Vec<Vec<usize>>,
+    directed: bool,
+}
+
+
+pub struct WeightedGraphBuilder {
+    pub graph: Vec<Vec<(usize, usize)>>,
+    directed: bool,
+}
+
+
+impl GraphBuilder {
+    pub fn new(n: usize, directed: bool) -> Self {
+        let graph: Vec<Vec<usize>> = vec![vec![]; n];
+        Self { graph, directed }
+    }
+
+    pub fn connect(&mut self, from: usize, to: usize) {
+        self.graph[from].push(to);
+        if !self.directed {
+            self.graph[to].push(from);
+        }
+    }
+}
+
+
+impl WeightedGraphBuilder {
+    pub fn new(n: usize, directed: bool) -> Self {
+        let graph: Vec<Vec<(usize, usize)>> = vec![vec![]; n];
+        Self { graph, directed }
+    }
+
+    pub fn connect(&mut self, from: usize, to: usize, weight: usize) {
+        self.graph[from].push((to, weight));
+        if !self.directed {
+            self.graph[to].push((from, weight));
+        }
+    }
+}
+
+
+
 use std::{collections::BinaryHeap, cmp::Reverse};
 
 const INF: usize = 100_000_000_000_000_000;
@@ -7,6 +50,7 @@ const INF: usize = 100_000_000_000_000_000;
 pub struct Dijkstra {
     graph: Vec<Vec<(usize, usize)>>,
 }
+
 
 impl Dijkstra {
     pub fn new(graph: Vec<Vec<(usize, usize)>>) -> Self {
@@ -107,31 +151,27 @@ impl LCA {
 }
 
 
-
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
 
-    let mut graph_dijkstra: Vec<Vec<(usize, usize)>> = vec![vec![]; n];
-    let mut graph_lca: Vec<Vec<usize>> = vec![vec![]; n];
+    let mut graph_dijkstra = WeightedGraphBuilder::new(n, false);
+    let mut graph_lca = GraphBuilder::new(n, false);
 
     for _ in 0..n-1 {
         let a = scanner.cin::<usize>() - 1;
         let b = scanner.cin::<usize>() - 1;
         let c: usize = scanner.cin();
 
-        graph_dijkstra[a].push((b, c));
-        graph_dijkstra[b].push((a, c));
-
-        graph_lca[a].push(b);
-        graph_lca[b].push(a);
+        graph_dijkstra.connect(a, b, c);
+        graph_lca.connect(a, b);
     }
 
-    let mut dijkstra = Dijkstra::new(graph_dijkstra);
+    let mut dijkstra = Dijkstra::new(graph_dijkstra.graph);
     let dist = dijkstra.search(ROOT);
 
-    let mut lca = LCA::new(graph_lca);
+    let mut lca = LCA::new(graph_lca.graph);
     lca.init();
 
     let q: usize = scanner.cin();
