@@ -1,19 +1,71 @@
-struct TopologicalSort {
-    g: Vec<Vec<usize>>,
-    deg: Vec<usize>,
+pub struct GraphBuilder {
+    pub graph: Vec<Vec<usize>>,
+    directed: bool,
 }
 
 
+pub struct WeightedGraphBuilder {
+    pub graph: Vec<Vec<(usize, usize)>>,
+    directed: bool,
+}
+
+
+impl GraphBuilder {
+    pub fn new(n: usize, directed: bool) -> Self {
+        let graph: Vec<Vec<usize>> = vec![vec![]; n];
+        Self { graph, directed }
+    }
+
+    pub fn connect(&mut self, from: usize, to: usize) {
+        self.graph[from].push(to);
+        if !self.directed {
+            self.graph[to].push(from);
+        }
+    }
+}
+
+
+impl WeightedGraphBuilder {
+    pub fn new(n: usize, directed: bool) -> Self {
+        let graph: Vec<Vec<(usize, usize)>> = vec![vec![]; n];
+        Self { graph, directed }
+    }
+
+    pub fn connect(&mut self, from: usize, to: usize, weight: usize) {
+        self.graph[from].push((to, weight));
+        if !self.directed {
+            self.graph[to].push((from, weight));
+        }
+    }
+}
+
+
+use std::{cmp::Reverse, collections::BinaryHeap};
+
+pub struct TopologicalSort {
+    graph: Vec<Vec<usize>>,
+    deg: Vec<usize>,
+}
+
 impl TopologicalSort {
-    pub fn new(g: Vec<Vec<usize>>, deg: Vec<usize>) -> Self {
-        TopologicalSort { g, deg }
+    pub fn new(graph: Vec<Vec<usize>>) -> Self {
+        let n: usize = graph.len();
+        let mut deg = vec![0; n];
+
+        for row in graph.iter() {
+            for &v in row.iter() {
+                deg[v] += 1;
+            }
+        }
+
+        TopologicalSort { graph, deg }
     }
 
     pub fn sort(&mut self) -> Vec<usize> {
         let mut ans: Vec<usize> = vec![];
         let mut s: BinaryHeap<_> = BinaryHeap::new();
 
-        for v in 0..self.g.len() {
+        for v in 0..self.graph.len() {
             if self.deg[v] == 0 {
                 s.push(Reverse(v));
             }
@@ -22,11 +74,13 @@ impl TopologicalSort {
         while let Some(Reverse(v)) = s.pop() {
             ans.push(v);
 
-            for &nv in self.g[v].iter() {
+            for &nv in self.graph[v].iter() {
                 if self.deg[nv] == 0 {
                     continue;
                 }
+
                 self.deg[nv] -= 1;
+
                 if self.deg[nv] == 0 {
                     s.push(Reverse(nv));
                 }
@@ -35,14 +89,11 @@ impl TopologicalSort {
 
         if ans.len() == self.deg.len() {
             ans
-        }
-        else {
+        } else {
             vec![]
         }
     }
 }
-
-
 
 
 #[allow(clippy::needless_range_loop)]
@@ -51,8 +102,7 @@ fn main() {
     let n: usize = scanner.cin();
     let m: usize = scanner.cin();
 
-    let mut g: Vec<Vec<usize>> = vec![vec![]; n];
-    let mut deg: Vec<usize> = vec![0; n];
+    let mut graph = GraphBuilder::new(n, true);
 
     for _ in 0..m {
         let a: usize = scanner.cin();
@@ -60,15 +110,13 @@ fn main() {
         let b: usize = scanner.cin();
         let b: usize = b - 1;
 
-        if g[a].contains(&b) {
+        if graph.graph[a].contains(&b) {
             continue;
         }
-
-        g[a].push(b);
-        deg[b] += 1;
+        graph.connect(a, b);
     }
 
-    let mut topological_sorter = TopologicalSort::new(g, deg);
+    let mut topological_sorter = TopologicalSort::new(graph.graph);
     let ans = topological_sorter.sort();
 
     if ans.len() == n {
@@ -83,8 +131,7 @@ fn main() {
 }
 
 
-use std::cmp::Reverse;
-use std::collections::{VecDeque, BinaryHeap};
+use std::collections::{VecDeque};
 use std::io::{self, Write};
 use std::str::FromStr;
 
