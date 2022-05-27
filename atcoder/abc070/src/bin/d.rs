@@ -1,78 +1,89 @@
-pub struct GraphBuilder {
-    pub graph: Vec<Vec<usize>>,
-    directed: bool,
-}
-
-
-pub struct WeightedGraphBuilder {
+#[derive(Clone, Debug)]
+pub struct Graph {
+    pub n: usize,
     pub graph: Vec<Vec<(usize, usize)>>,
+    pub in_degrees: Vec<usize>,
+    pub out_degrees: Vec<usize>,
     directed: bool,
 }
 
 
-impl GraphBuilder {
-    pub fn new(n: usize, directed: bool) -> Self {
-        let graph: Vec<Vec<usize>> = vec![vec![]; n];
-        Self { graph, directed }
-    }
-
-    pub fn connect(&mut self, from: usize, to: usize) {
-        self.graph[from].push(to);
-        if !self.directed {
-            self.graph[to].push(from);
-        }
-    }
-}
-
-
-impl WeightedGraphBuilder {
+impl Graph {
     pub fn new(n: usize, directed: bool) -> Self {
         let graph: Vec<Vec<(usize, usize)>> = vec![vec![]; n];
-        Self { graph, directed }
+        let in_degrees = vec![0; n];
+        let out_degrees = vec![0; n];
+        Self { n, graph, in_degrees, out_degrees, directed }
     }
 
     pub fn connect(&mut self, from: usize, to: usize, weight: usize) {
         self.graph[from].push((to, weight));
+        self.out_degrees[from] += 1;
+        self.in_degrees[to] += 1;
+
         if !self.directed {
             self.graph[to].push((from, weight));
+            self.out_degrees[to] += 1;
+            self.in_degrees[from] += 1;
         }
+    }
+
+    pub fn connect_unweighted(&mut self, from: usize, to: usize) {
+        self.graph[from].push((to, 1));
+        self.out_degrees[from] += 1;
+        self.in_degrees[to] += 1;
+
+        if !self.directed {
+            self.graph[to].push((from, 1));
+            self.out_degrees[to] += 1;
+            self.in_degrees[from] += 1;
+        }
+    }
+
+    pub fn in_degree(&self, u: usize) -> usize {
+        self.graph[u].len()
+    }
+
+    pub fn out_degree(&self, u: usize) -> usize {
+        self.graph[u].len()
+    }
+
+    pub fn connected(&self, u: usize, v: usize) -> bool {
+        self.graph[u].iter().filter(|&&(k,_)| v == k).count() > 0
     }
 }
 
-
-
-use std::{collections::BinaryHeap, cmp::Reverse};
 
 const INF: usize = 100_000_000_000_000_000;
 
 
 #[derive(Debug, Clone)]
 pub struct Dijkstra {
-    graph: Vec<Vec<(usize, usize)>>,
+    graph: Graph,
 }
 
 
 impl Dijkstra {
-    pub fn new(graph: Vec<Vec<(usize, usize)>>) -> Self {
+    pub fn new(graph: Graph) -> Self {
         Self { graph }
     }
 
     pub fn search(&mut self, src: usize) -> Vec<usize> {
-        let mut dist = vec![INF; self.graph.len()];
+        let mut dist = vec![INF; self.graph.n];
         dist[src] = 0;
 
-        let mut queue = BinaryHeap::new();
-        queue.push((Reverse(0), src));
+        let mut queue = std::collections::BinaryHeap::new();
+        queue.push((std::cmp::Reverse(0), src));
 
-        while let Some((Reverse(current_cost), current_v)) = queue.pop() {
+        while let Some((std::cmp::Reverse(current_cost), current_v)) = queue.pop() {
             if dist[current_v] < current_cost {
                 continue;
             }
 
-            for &(v, cost) in self.graph[current_v].iter() {
+            for &(v, cost) in self.graph.graph[current_v].iter() {
                 if dist[v] > current_cost + cost {
                     dist[v] = current_cost + cost;
-                    queue.push((Reverse(dist[v]), v));
+                    queue.push((std::cmp::Reverse(dist[v]), v));
                 }
             }
         }
@@ -89,13 +100,13 @@ const MAX_LOG_V: usize = 30;
 pub struct LCA {
     parents: Vec<Vec<usize>>,
     depth: Vec<usize>,
-    graph: Vec<Vec<usize>>,
+    graph: Graph,
 }
 
 
 impl LCA {
-    pub fn new(graph: Vec<Vec<usize>>) -> Self {
-        let n = graph.len();
+    pub fn new(graph: Graph) -> Self {
+        let n = graph.n;
         let parents = vec![vec![ROOT; n]; MAX_LOG_V];
         let depth = vec![ROOT; n];
         LCA { parents, depth, graph }
@@ -105,7 +116,7 @@ impl LCA {
         self.dfs(ROOT, ROOT, 0);
 
         for k in 0..MAX_LOG_V-1 {
-            for v in 0..self.graph.len() {
+            for v in 0..self.graph.n {
                 self.parents[k+1][v] = self.parents[k][self.parents[k][v]];
             }
         }
@@ -115,8 +126,8 @@ impl LCA {
         self.parents[0][v] = p;
         self.depth[v] = d;
 
-        for i in 0..self.graph[v].len() {
-            let nv = self.graph[v][i];
+        for i in 0..self.graph.graph[v].len() {
+            let (nv, _) = self.graph.graph[v][i];
 
             if nv != p {
                 self.dfs(nv, v, d + 1);
@@ -156,22 +167,20 @@ fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
 
-    let mut graph_dijkstra = WeightedGraphBuilder::new(n, false);
-    let mut graph_lca = GraphBuilder::new(n, false);
+    let mut graph = Graph::new(n, false);
+
 
     for _ in 0..n-1 {
         let a = scanner.cin::<usize>() - 1;
         let b = scanner.cin::<usize>() - 1;
         let c: usize = scanner.cin();
-
-        graph_dijkstra.connect(a, b, c);
-        graph_lca.connect(a, b);
+        graph.connect(a, b, c);
     }
 
-    let mut dijkstra = Dijkstra::new(graph_dijkstra.graph);
+    let mut dijkstra = Dijkstra::new(graph.clone());
     let dist = dijkstra.search(ROOT);
 
-    let mut lca = LCA::new(graph_lca.graph);
+    let mut lca = LCA::new(graph);
     lca.init();
 
     let q: usize = scanner.cin();
