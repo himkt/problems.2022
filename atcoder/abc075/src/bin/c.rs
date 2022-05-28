@@ -1,24 +1,79 @@
-#[derive(Debug,Clone)]
+#[derive(Clone, Debug)]
+pub struct Graph {
+    pub n: usize,
+    pub graph: Vec<Vec<(usize, usize)>>,
+    pub in_degrees: Vec<usize>,
+    pub out_degrees: Vec<usize>,
+    directed: bool,
+}
+
+
+impl Graph {
+    pub fn new(n: usize, directed: bool) -> Self {
+        let graph: Vec<Vec<(usize, usize)>> = vec![vec![]; n];
+        let in_degrees = vec![0; n];
+        let out_degrees = vec![0; n];
+        Self { n, graph, in_degrees, out_degrees, directed }
+    }
+
+    pub fn connect(&mut self, from: usize, to: usize, weight: usize) {
+        self.graph[from].push((to, weight));
+        self.out_degrees[from] += 1;
+        self.in_degrees[to] += 1;
+
+        if !self.directed {
+            self.graph[to].push((from, weight));
+            self.out_degrees[to] += 1;
+            self.in_degrees[from] += 1;
+        }
+    }
+
+    pub fn connect_unweighted(&mut self, from: usize, to: usize) {
+        self.graph[from].push((to, 1));
+        self.out_degrees[from] += 1;
+        self.in_degrees[to] += 1;
+
+        if !self.directed {
+            self.graph[to].push((from, 1));
+            self.out_degrees[to] += 1;
+            self.in_degrees[from] += 1;
+        }
+    }
+
+    pub fn in_degree(&self, u: usize) -> usize {
+        self.graph[u].len()
+    }
+
+    pub fn out_degree(&self, u: usize) -> usize {
+        self.graph[u].len()
+    }
+
+    pub fn connected(&self, u: usize, v: usize) -> bool {
+        self.graph[u].iter().filter(|&&(k,_)| v == k).count() > 0
+    }
+}
+
+
+#[derive(Debug, Clone)]
 pub struct Lowlink {
-    n: usize,
-    graph: Vec<Vec<usize>>,
+    graph: Graph,
     used: Vec<bool>,
     ord: Vec<usize>,
     low: Vec<usize>,
     bridges: Vec<(usize, usize)>,
 }
 
+
 #[allow(clippy::needless_range_loop)]
 impl Lowlink {
-    pub fn new(graph: Vec<Vec<usize>>) -> Self {
-        let n: usize = graph.len();
+    pub fn new(graph: Graph) -> Self {
+        let n: usize = graph.n;
         let used = vec![false; n];
         let ord: Vec<usize> = vec![0; n];
         let low: Vec<usize> = vec![0; n];
         let bridges: Vec<(usize, usize)> = vec![];
 
         Self {
-            n,
             graph,
             used,
             ord,
@@ -28,9 +83,8 @@ impl Lowlink {
     }
 
     pub fn search(&mut self) {
-        let mut k: usize = 0;
-
-        for u in 0..self.n {
+        let mut k = 0;
+        for u in 0..self.graph.n {
             if self.used[u] {
                 continue;
             }
@@ -42,11 +96,11 @@ impl Lowlink {
         self.used[u] = true;
 
         self.ord[u] = k;
-        self.low[u] = self.ord[u];
+        self.low[u] = k;
         k += 1;
 
-        for i in 0..self.graph[u].len() {
-            let v = self.graph[u][i];
+        for i in 0..self.graph.graph[u].len() {
+            let (v, _) = self.graph.graph[u][i];
 
             if !self.used[v] {
                 k = self.dfs(v, k, Some(u));
@@ -54,10 +108,8 @@ impl Lowlink {
 
                 if self.ord[u] < self.low[v] {
                     self.bridges.push((u.min(v), u.max(v)));
-
                 }
-            }
-            else if p.is_some() && v != p.unwrap() {
+            } else if p.is_some() && v != p.unwrap() {
                 self.low[u] = self.low[u].min(self.ord[v]);
             }
         }
@@ -65,7 +117,7 @@ impl Lowlink {
         k
     }
 
-    pub fn num_bridges(&mut self) -> usize {
+    pub fn num_bridges(&self) -> usize {
         self.bridges.len()
     }
 }
@@ -77,12 +129,11 @@ fn main() {
     let n: usize = scanner.cin();
     let m: usize = scanner.cin();
 
-    let mut graph: Vec<Vec<usize>> = vec![vec![]; n];
+    let mut graph = Graph::new(n, false);
     for _ in 0..m {
         let a: usize = scanner.cin::<usize>() - 1;
         let b: usize = scanner.cin::<usize>() - 1;
-        graph[a].push(b);
-        graph[b].push(a);
+        graph.connect_unweighted(a, b);
     }
 
     let mut lowlink = Lowlink::new(graph);

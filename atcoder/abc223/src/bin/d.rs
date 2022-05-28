@@ -1,93 +1,98 @@
-pub struct GraphBuilder {
-    pub graph: Vec<Vec<usize>>,
-    directed: bool,
-}
-
-
-pub struct WeightedGraphBuilder {
+#[derive(Clone, Debug)]
+pub struct Graph {
+    pub n: usize,
     pub graph: Vec<Vec<(usize, usize)>>,
+    pub in_degrees: Vec<usize>,
+    pub out_degrees: Vec<usize>,
     directed: bool,
 }
 
 
-impl GraphBuilder {
-    pub fn new(n: usize, directed: bool) -> Self {
-        let graph: Vec<Vec<usize>> = vec![vec![]; n];
-        Self { graph, directed }
-    }
-
-    pub fn connect(&mut self, from: usize, to: usize) {
-        self.graph[from].push(to);
-        if !self.directed {
-            self.graph[to].push(from);
-        }
-    }
-}
-
-
-impl WeightedGraphBuilder {
+impl Graph {
     pub fn new(n: usize, directed: bool) -> Self {
         let graph: Vec<Vec<(usize, usize)>> = vec![vec![]; n];
-        Self { graph, directed }
+        let in_degrees = vec![0; n];
+        let out_degrees = vec![0; n];
+        Self { n, graph, in_degrees, out_degrees, directed }
     }
 
     pub fn connect(&mut self, from: usize, to: usize, weight: usize) {
         self.graph[from].push((to, weight));
+        self.out_degrees[from] += 1;
+        self.in_degrees[to] += 1;
+
         if !self.directed {
             self.graph[to].push((from, weight));
+            self.out_degrees[to] += 1;
+            self.in_degrees[from] += 1;
         }
+    }
+
+    pub fn connect_unweighted(&mut self, from: usize, to: usize) {
+        self.graph[from].push((to, 1));
+        self.out_degrees[from] += 1;
+        self.in_degrees[to] += 1;
+
+        if !self.directed {
+            self.graph[to].push((from, 1));
+            self.out_degrees[to] += 1;
+            self.in_degrees[from] += 1;
+        }
+    }
+
+    pub fn in_degree(&self, u: usize) -> usize {
+        self.graph[u].len()
+    }
+
+    pub fn out_degree(&self, u: usize) -> usize {
+        self.graph[u].len()
+    }
+
+    pub fn connected(&self, u: usize, v: usize) -> bool {
+        self.graph[u].iter().filter(|&&(k,_)| v == k).count() > 0
     }
 }
 
 
-use std::{cmp::Reverse, collections::BinaryHeap};
-
 pub struct TopologicalSort {
-    graph: Vec<Vec<usize>>,
-    deg: Vec<usize>,
+    graph: Graph,
 }
 
+
+#[allow(clippy::needless_range_loop)]
 impl TopologicalSort {
-    pub fn new(graph: Vec<Vec<usize>>) -> Self {
-        let n: usize = graph.len();
-        let mut deg = vec![0; n];
-
-        for row in graph.iter() {
-            for &v in row.iter() {
-                deg[v] += 1;
-            }
-        }
-
-        TopologicalSort { graph, deg }
+    pub fn new(graph: Graph) -> Self {
+        TopologicalSort { graph }
     }
 
     pub fn sort(&mut self) -> Vec<usize> {
         let mut ans: Vec<usize> = vec![];
-        let mut s: BinaryHeap<_> = BinaryHeap::new();
+        let mut s = std::collections::BinaryHeap::new();
+        let mut degrees = self.graph.in_degrees.clone();
 
-        for v in 0..self.graph.len() {
-            if self.deg[v] == 0 {
-                s.push(Reverse(v));
+        for v in 0..self.graph.n {
+            if degrees[v] == 0 {
+                s.push(std::cmp::Reverse(v));
             }
         }
 
-        while let Some(Reverse(v)) = s.pop() {
+        while let Some(std::cmp::Reverse(v)) = s.pop() {
             ans.push(v);
 
-            for &nv in self.graph[v].iter() {
-                if self.deg[nv] == 0 {
+            for &(nv, _) in self.graph.graph[v].iter() {
+                if degrees[nv] == 0 {
                     continue;
                 }
 
-                self.deg[nv] -= 1;
+                degrees[nv] -= 1;
 
-                if self.deg[nv] == 0 {
-                    s.push(Reverse(nv));
+                if degrees[nv] == 0 {
+                    s.push(std::cmp::Reverse(nv));
                 }
             }
         }
 
-        if ans.len() == self.deg.len() {
+        if ans.len() == degrees.len() {
             ans
         } else {
             vec![]
@@ -102,7 +107,7 @@ fn main() {
     let n: usize = scanner.cin();
     let m: usize = scanner.cin();
 
-    let mut graph = GraphBuilder::new(n, true);
+    let mut graph = Graph::new(n, true);
 
     for _ in 0..m {
         let a: usize = scanner.cin();
@@ -110,13 +115,13 @@ fn main() {
         let b: usize = scanner.cin();
         let b: usize = b - 1;
 
-        if graph.graph[a].contains(&b) {
+        if graph.connected(a, b) {
             continue;
         }
-        graph.connect(a, b);
+        graph.connect_unweighted(a, b);
     }
 
-    let mut topological_sorter = TopologicalSort::new(graph.graph);
+    let mut topological_sorter = TopologicalSort::new(graph);
     let ans = topological_sorter.sort();
 
     if ans.len() == n {
