@@ -8,10 +8,9 @@ fn main() {
     let cs: Vec<char> = scanner.cin::<String>().chars().collect();
     let n: usize = cs.len();
 
-    let mut num_nico = 0;
+    let mut ans: usize = 0;
+    let mut num_nico: usize = 0;
     let mut state = State::Non;
-    let mut ans = 0;
-
     for i in 0..n {
         if cs[i] == '2' {
             match state {
