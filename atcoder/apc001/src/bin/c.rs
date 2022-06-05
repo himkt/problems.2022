@@ -1,5 +1,88 @@
+const VACANT: &str = "Vacant";
+const UNREGI: &str = "NA";
+
+
+#[allow(clippy::collapsible_if)]
+#[allow(clippy::collapsible_else_if)]
+#[allow(clippy::if_same_then_else)]
 fn main() {
     let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+    let mut seats: Vec<String> = vec![String::from(UNREGI); n];
+
+    println!("0");
+    let result: String = scanner.cin();
+    flush();
+
+    if result == VACANT {
+        return;
+    }
+
+    seats[0] = result;
+
+    println!("{}", n - 1);
+    let result: String = scanner.cin();
+    flush();
+
+    if result == VACANT {
+        return;
+    }
+
+    seats[n - 1] = result;
+
+    let mut l = 0;
+    let mut r = n - 1;
+
+    while r > l {
+        let m = l + (r - l) / 2;
+        println!("{}", m);
+
+        let result: String = scanner.cin();
+        flush();
+
+        if result == VACANT {
+            return;
+        }
+
+        if seats[l] != UNREGI {
+            if (m - l) % 2 == 0 {
+                if seats[l] == result {
+                    l = m;
+                }
+                else {
+                    r = m;
+                }
+            }
+            else {
+                if seats[l] == result {
+                    r = m;
+                }
+                else {
+                    l = m;
+                }
+            }
+        }
+        else {
+            if (r - m) % 2 == 0 {
+                if seats[r] == result {
+                    r = m;
+                }
+                else {
+                    l = m;
+                }
+            }
+            else {
+                if seats[r] == result {
+                    l = m;
+                }
+                else {
+                    r = m;
+                }
+            }
+        }
+
+        seats[m] = result;
+    }
 }
 
 
