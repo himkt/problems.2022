@@ -58,48 +58,57 @@ impl Graph {
     }
 }
 
-struct EulerTour {
+pub struct EulerTour {
     graph: Graph,
     l: Vec<usize>,
     r: Vec<usize>,
     t: usize,
 }
 
-const INF: usize = 1_000_000_000_000;
-
 impl EulerTour {
-    fn new(n: usize, graph: Graph) -> Self {
-        let l = vec![INF; n];
-        let r = vec![INF; n];
+    const INF: usize = 100_000_000_000_000_000;
+
+    pub fn new(n: usize, graph: Graph) -> Self {
+        let l = vec![EulerTour::INF; n];
+        let r = vec![EulerTour::INF; n];
         EulerTour { graph, l, r, t: 1 }
     }
 
-    fn dfs(&mut self, u: usize, p: Option<usize>) {
+    /// Euler tour entrypoint that returns two vectors `(&l, &r)`.
+    /// Note that timestamp starts from `1`.
+    ///
+    /// - `l`: vector indicates the timestamp that visits a node `u` at the first time.
+    /// - `r`: vector indicates the timestamp that visits a node `u` at the last time.
+    pub fn traverse(&mut self, root: usize) -> (&[usize], &[usize]) {
+        self._dfs(root, None);
+
+        for i in 0..self.l.len() {
+            if self.r[i] == EulerTour::INF {
+                self.r[i] = self.l[i];
+            }
+        }
+
+        (&self.l, &self.r)
+    }
+
+    fn _dfs(&mut self, u: usize, p: Option<usize>) {
         self.l[u] = self.t;
         self.t += 1;
 
         for i in 0..self.graph.graph[u].len() {
             let (v, _) = self.graph.graph[u][i];
             if p != Some(v) {
-                self.dfs(v, Some(u));
+                self._dfs(v, Some(u));
                 self.r[u] = self.t;
                 self.t += 1;
             }
         }
-
     }
 }
-
-const VMIN: i64   = -1_000_000_000_000;
-const TINF: usize =  1_000_000_000_000;
 
 #[derive(Debug, Clone)]
 pub struct RMQ {
     v: Vec<(i64, usize)>,
-}
-
-impl RMQ {
-    const SEQ_LEN: usize = 1 << 18;
 }
 
 impl Default for RMQ {
@@ -109,9 +118,14 @@ impl Default for RMQ {
 }
 
 impl RMQ {
+    const SEQ_LEN: usize = 1<<18;
+    const VMIN: i64  = - 1_000_000_000_000_000;
+    const INF: usize =   1_000_000_000_000_000;
+    const UNIT: (i64, usize) = (RMQ::VMIN, RMQ::INF);
+
     pub fn new() -> Self {
         Self {
-            v: vec![(VMIN, TINF); 2 * RMQ::SEQ_LEN],
+            v: vec![RMQ::UNIT; 2 * RMQ::SEQ_LEN],
         }
     }
 
@@ -129,7 +143,7 @@ impl RMQ {
         }
     }
 
-    /// Sum values on `[l, r)`. Note that it is a half-open interval.
+    /// Max value on `[l, r)`. Note that it is a half-open interval.
     /// 0-origin.
     pub fn max(&self, l: usize, r: usize) -> (i64, usize) {
         self._max(l, r, 0, RMQ::SEQ_LEN, 1)
@@ -137,7 +151,7 @@ impl RMQ {
 
     fn _max(&self, ql: usize, qr: usize, sl: usize, sr: usize, pos: usize) -> (i64, usize) {
         if qr <= sl || sr <= ql {
-            return (VMIN,TINF);
+            return RMQ::UNIT;
         }
         if ql <= sl && sr <= qr {
             return self.v[pos];
@@ -147,6 +161,16 @@ impl RMQ {
         let lv = self._max(ql, qr, sl, sm, pos * 2);
         let rv = self._max(ql, qr, sm, sr, pos * 2 + 1);
         lv.max(rv)
+    }
+
+    pub fn from(v: Vec<i64>) -> Self {
+        let mut rsq = RMQ::new();
+        for (index, value) in (0..v.len()).zip(v.into_iter()) {
+            let idx = RMQ::SEQ_LEN + index;
+            rsq.v[idx] = (value, index);
+        }
+
+        rsq
     }
 }
 
@@ -164,15 +188,7 @@ fn main() {
     }
 
     let mut solver = EulerTour::new(n, graph);
-    solver.dfs(0, None);
-
-    let l: Vec<usize> = solver.l;
-    let mut r: Vec<usize> = solver.r;
-    for i in 0..n {
-        if r[i] == TINF {
-            r[i] = l[i];
-        }
-    }
+    let (l, r) = solver.traverse(0);
 
     let mut rmq = RMQ::new();
     for (u, x) in (0..n).zip(xs) {
@@ -190,7 +206,7 @@ fn main() {
         for _ in 0..(k - 1) {
             let mx = rmq.max(li, ri + 1);
             buf.push(mx);
-            rmq.update(mx.1, (VMIN, TINF));
+            rmq.update(mx.1, RMQ::UNIT);
         }
 
         let (ans, _) = rmq.max(li, ri + 1);
