@@ -19,14 +19,9 @@ fn main() {
     let max = vs.iter().max().unwrap();
     let min = vs.iter().min().unwrap();
 
-    let num_char_type = cnt
-        .values()
-        .filter(|&&v| v > 0)
-        .count();
-
     // aa, bb, cc
     if s.len() == 2 {
-        if num_char_type == 1 {
+        if cnt.len() == 1 {
             println!("NO");
             return;
         }
@@ -34,7 +29,7 @@ fn main() {
 
     // aba, aca, bab, bcb, cac, cbc
     if s.len() >= 3 {
-        if num_char_type <= 2 {
+        if cnt.len() <= 2 {
             println!("NO");
             return;
         }
