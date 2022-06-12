@@ -3,15 +3,35 @@ fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
     let m: usize = scanner.cin();
-    let mut s: Vec<i128> = scanner.vec(n - 1);
+    let s: Vec<i128> = scanner.vec(n - 1);
     let x: Vec<i128> = scanner.vec(m);
-    s.sort_unstable();
 
+    let mut b = vec![0; n];
+    for i in 1..n {
+        b[i] = s[i - 1] - b[i - 1];
+    }
 
+    let mut cnt: HashMap<i128, usize> = HashMap::new();
+    for i in 0..n {
+        for j in 0..m {
+            let sign = if i % 2 == 0 { 1 } else { -1 };
+
+            // a[i] が lucky number (x[j]) である場合の初項
+            let a_0 = sign * (x[j] - b[i]);
+            *cnt.entry(a_0).or_insert(0) += 1;
+        }
+    }
+
+    let mut ans = 0;
+    for (_, v) in cnt {
+        ans = ans.max(v);
+    }
+
+    println!("{:?}", ans);
 }
 
 
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashMap};
 use std::io::{self, Write};
 use std::str::FromStr;
 
