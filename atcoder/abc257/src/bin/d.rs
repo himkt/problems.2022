@@ -1,40 +1,95 @@
 const INF: usize = 1_000_000_000_000;
 
+pub fn lower_bound(range: std::ops::Range<usize>, prop: &dyn Fn(usize) -> bool) -> usize {
+    if prop(range.start) {
+        return range.start;
+    }
+
+    let mut ng = range.start;
+    let mut ok = range.end;
+
+    while ok - ng > 1 {
+        let middle = ng + (ok - ng) / 2;
+        match prop(middle) {
+            true => ok = middle,
+            false => ng = middle,
+        }
+    }
+
+    ok
+}
+
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
 
     let mut points = vec![];
+    let mut powers = vec![];
     for _ in 0..n {
         let x: i128 = scanner.cin();
         let y: i128 = scanner.cin();
+        let p: usize = scanner.cin();
         points.push((x, y));
+        powers.push(p);
     }
 
-    let mut graph = vec![vec![INF; n]; n];
+    let mut dist = vec![vec![INF; n]; n];
     for i in 0..n {
+        dist[i][i] = 0;
+
         for j in 0..n {
             let dx = (points[i].0 - points[j].0).abs();
             let dy = (points[i].1 - points[j].1).abs();
-            graph[i][j] = (dx + dy) as usize;
+            dist[i][j] = (dx + dy) as usize;
         }
     }
 
-    println!("{:?}", graph);
+    let construct = |s: usize| -> Vec<Vec<usize>> {
+        let mut graph = vec![vec![]; n];
 
-    for k in 0..n {
         for i in 0..n {
             for j in 0..n {
-                graph[i][j] = graph[i][j].min(graph[i][k] + graph[k][j]);
+                if powers[i] * s >= dist[i][j] {
+                    graph[i].push(j);
+                }
             }
         }
-    }
 
-    println!("{:?}", graph);
+        graph
+    };
+
+    let connected = |s: usize| -> bool {
+        let graph = construct(s);
+
+        for root in 0..n {
+            let mut queue = VecDeque::new();
+            queue.push_back(root);
+
+            let mut used = vec![false; n];
+            while let Some(u) = queue.pop_front() {
+                used[u] = true;
+
+                for i in 0..graph[u].len() {
+                    let v = graph[u][i];
+                    if used[v] { continue; }
+                    queue.push_back(v);
+                }
+            }
+
+            if used.iter().all(|&x| x) {
+                return true;
+            }
+        }
+
+        false
+    };
+
+    let ans = lower_bound(0..INF, &|x| connected(x));
+    println!("{}", ans);
 }
 
-use std::io::Write;
+use std::{io::Write, collections::VecDeque};
 pub fn flush() { std::io::stdout().flush().unwrap(); }
 pub struct Scanner { stdin: std::io::Stdin, buffer: std::collections::VecDeque<String> }
 impl Scanner {
