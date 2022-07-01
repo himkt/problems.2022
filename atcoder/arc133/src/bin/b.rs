@@ -1,112 +1,68 @@
 pub fn lower_bound(range: std::ops::Range<usize>, prop: &dyn Fn(usize) -> bool) -> usize {
     if prop(range.start) {
-        range.start
+        return range.start;
     }
-    else {
-        let mut ng = range.start;
-        let mut ok = range.end;
 
-        while ok - ng > 1 {
-            let middle = ng + (ok - ng) / 2;
+    let mut ng = range.start;
+    let mut ok = range.end;
 
-            if prop(middle) {
-                ok = middle;
-            }
-            else {
-                ng = middle;
-            }
+    while ok - ng > 1 {
+        let middle = ng + (ok - ng) / 2;
+        match prop(middle) {
+            true => ok = middle,
+            false => ng = middle,
         }
-
-        ok
     }
+
+    ok
 }
 
+const INF: usize = 1_000_000_000;
 
+#[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
+    let a: Vec<usize> = scanner.vec(n);
+    let b: Vec<usize> = scanner.vec(n);
 
-    let p: Vec<usize> = scanner.vec(n);
-    let mut q: Vec<usize> = vec![0; n+1];
-
-    for i in 0..n {
-        let qi: usize = scanner.cin();
-        q[qi] = i;
+    let mut positions = HashMap::new();
+    for (i, &bi) in b.iter().enumerate() {
+        positions.insert(bi, i);
     }
 
-    let mut vs = vec![];
-    for i in 0..n {
-        let mut j = p[i];
-        while j <= n {
-            vs.push((i, q[j]));
-            j += p[i];
+    let mut pairs = vec![];
+    for (i, &ai) in a.iter().enumerate() {
+        let mut k = 1;
+        while k * ai <= n {
+            let j = positions[&(k * ai)];
+            pairs.push((i, j));
+            k += 1;
         }
     }
 
-    vs.sort_unstable_by_key(|&(i1, i2)| (i1, Reverse(i2)));
+    pairs.sort_unstable_by_key(|&(i, j)| (i, Reverse(j)));
 
-    let mut lis = vec![];
-    for (_, s) in vs {
-        if lis.is_empty() { lis.push(s); }
-        else {
-            if &s > lis.last().unwrap() {
-                lis.push(s);
-            }
-            else {
-                let i = lower_bound(0..lis.len(), &|x| lis[x] >= s);
-                lis[i] = s;
-            }
-        }
+    let mut lis = vec![INF; n];
+    let m: usize = pairs.len();
+    for i in 0..m {
+        let j = lower_bound(0..n, &|x| lis[x] >= pairs[i].1);
+        lis[j] = pairs[i].1;
     }
 
-    println!("{}", lis.len());
+    let ans: usize = lower_bound(0..n, &|x| lis[x] >= INF);
+    println!("{}", ans);
 }
 
-
-use std::cmp::Reverse;
-use std::collections::VecDeque;
-use std::io::{self, Write};
-use std::str::FromStr;
-
-#[allow(dead_code)]
-struct Scanner {
-    stdin: io::Stdin,
-    buffer: VecDeque<String>,
-}
-#[allow(dead_code)]
+use std::{io::Write, collections::HashMap, cmp::Reverse}; pub fn flush() { std::io::stdout().flush().unwrap(); }
+pub struct Scanner { buffer: std::collections::VecDeque<String>, buf: String }
 impl Scanner {
-    fn new() -> Self {
-        Self {
-            stdin: io::stdin(),
-            buffer: VecDeque::new(),
-        }
-    }
-
-    fn cin<T: FromStr>(&mut self) -> T {
-        while self.buffer.is_empty() {
-            let mut line = String::new();
-            let _ = self.stdin.read_line(&mut line);
-            for w in line.split_whitespace() {
-                self.buffer.push_back(String::from(w));
-            }
-        }
+    pub fn new() -> Self { Scanner { buffer: std::collections::VecDeque::new(), buf: String::new() } }
+    pub fn cin<T: std::str::FromStr>(&mut self) -> T {
+        if !self.buffer.is_empty() { return self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap(); }
+        self.buf.truncate(0); std::io::stdin().read_line(&mut self.buf).ok();
+        self.buf.to_owned().split_whitespace().for_each(|x| self.buffer.push_back(String::from(x)));
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
     }
-
-    fn usize1(&mut self) -> usize {
-        self.cin::<usize>() - 1
-    }
-
-    fn chars(&mut self) -> Vec<char> {
-        self.cin::<String>().chars().collect()
-    }
-
-    fn vec<T: FromStr>(&mut self, n: usize) -> Vec<T> {
-        (0..n).map(|_| self.cin()).collect()
-    }
-}
-
-#[allow(dead_code)]
-fn flush() {
-    std::io::stdout().flush().unwrap();
+    pub fn vec<T: std::str::FromStr>(&mut self, n: usize) -> Vec<T> { (0..n).map(|_| self.cin()).collect() }
 }
