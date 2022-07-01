@@ -1,91 +1,107 @@
+#[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
     let t: usize = scanner.cin();
 
     for _ in 0..t {
-        let a: usize = scanner.cin();
-        let s: usize = scanner.cin();
+        let mut a: usize = scanner.cin();
+        let mut s: usize = scanner.cin();
+        let ao = a.clone();
+        let so = s.clone();
+        
+        let mut carried = false;
 
-        let mut d1 = 0;
-        let mut d2 = 0;
-        let mut carry = false;
+        let mut x: usize = 0;
+        let mut y: usize = 0;
 
         for i in 0..62 {
-            let k1 = (a >> i) & 1;
-            let k2 = (s >> i) & 1;
+            let ai = a % 2;
+            let si = s % 2;
 
-            if k1 == 1 {
-                d1 |= 1 << i;
-                d2 |= 1 << i;
-                carry = true;
-            } else if carry {
-                if k2 == 1 {
-                    carry = false;
-                } else if k2 == 0 {
-                    d1 |= 1 << i;
-                    carry = true;
+            if a > 0 && s == 0 {
+                break;
+            }
+
+            if s == 0 {
+                break;
+            }
+
+            if !carried {
+                if ai == 1 {
+                    if si == 1 {
+                        break;
+                    }
+                    else {
+                        // (xi, yi) = (1, 1)
+                        carried = true;
+
+                        x += 2usize.pow(i);
+                        y += 2usize.pow(i);
+                    }
                 }
-            } else {
-                if k2 == 1 {
-                    d1 |= 1 << i;
-                    carry = false;
-                } else if k2 == 0 {
-                    carry = false;
+                else {
+                    if si == 1 {
+                        // (xi, yi) = (1, 0) or (0, 1)
+                        carried = false;
+
+                        x += 2usize.pow(i);
+                    }
+                    else {
+                        // (xi, yi) = (0, 0)
+                        carried = false;
+                    }
                 }
             }
+            // if carried
+            else {
+                if ai == 1 {
+                    if si == 1 {
+                        // (xi, yi) = (1, 1)
+                        carried = true;
+
+                        x += 2usize.pow(i);
+                        y += 2usize.pow(i);
+                    }
+                    else {
+                        break;
+                    }
+                }
+                else {
+                    if si == 1 {
+                        // (xi, yi) = (0, 0)
+                        carried = false;
+                    }
+                    else {
+                        // (xi, yi) = (1, 0) or (0, 1)
+                        carried = true;
+
+                        x += 2usize.pow(i);
+                    }
+                }
+            }
+
+            a>>=1;
+            s>>=1;
         }
 
-        if d1 + d2 == s && d1 & d2 == a {
+        if x + y == so && x & y == ao {
             println!("Yes");
-        } else {
+        }
+        else {
             println!("No");
         }
     }
 }
 
-use std::collections::VecDeque;
-use std::io::{self, Write};
-use std::str::FromStr;
-
-#[allow(dead_code)]
-struct Scanner {
-    stdin: io::Stdin,
-    buffer: VecDeque<String>,
-}
-#[allow(dead_code)]
+use std::io::Write; pub fn flush() { std::io::stdout().flush().unwrap(); }
+pub struct Scanner { buffer: std::collections::VecDeque<String>, buf: String }
 impl Scanner {
-    fn new() -> Self {
-        Self {
-            stdin: io::stdin(),
-            buffer: VecDeque::new(),
-        }
-    }
-
-    fn cin<T: FromStr>(&mut self) -> T {
-        while self.buffer.is_empty() {
-            let mut line = String::new();
-            let _ = self.stdin.read_line(&mut line);
-            for w in line.split_whitespace() {
-                self.buffer.push_back(String::from(w));
-            }
-        }
+    pub fn new() -> Self { Scanner { buffer: std::collections::VecDeque::new(), buf: String::new() } }
+    pub fn cin<T: std::str::FromStr>(&mut self) -> T {
+        if !self.buffer.is_empty() { return self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap(); }
+        self.buf.truncate(0); std::io::stdin().read_line(&mut self.buf).ok();
+        self.buf.to_owned().split_whitespace().for_each(|x| self.buffer.push_back(String::from(x)));
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
     }
-
-    fn usize1(&mut self) -> usize {
-        self.cin::<usize>() - 1
-    }
-
-    fn chars(&mut self) -> Vec<char> {
-        self.cin::<String>().chars().collect()
-    }
-
-    fn vec<T: FromStr>(&mut self, n: usize) -> Vec<T> {
-        (0..n).map(|_| self.cin()).collect()
-    }
-}
-
-#[allow(dead_code)]
-fn flush() {
-    std::io::stdout().flush().unwrap();
+    pub fn vec<T: std::str::FromStr>(&mut self, n: usize) -> Vec<T> { (0..n).map(|_| self.cin()).collect() }
 }
