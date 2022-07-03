@@ -1,0 +1,40 @@
+#[allow(clippy::needless_range_loop)]
+fn main() {
+    let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+    let mut x: usize = scanner.cin();
+
+    let games: Vec<(usize, usize)> = (0..n)
+        .map(|_| {
+            let game = scanner.vec::<usize>(2);
+            (game[0], game[1])
+        })
+        .collect();
+
+    let mut ans: usize = 10_000_000_000_000_000_000;
+    let mut time = 0;
+
+    for i in 0..n {
+        // story + play
+        time += games[i].0 + games[i].1;
+        x -= 1;
+
+        //println!("{}", time + x * games[i].1);
+        ans = ans.min(time + x * games[i].1);
+    }
+
+    println!("{}", ans);
+}
+
+use std::io::Write; pub fn flush() { std::io::stdout().flush().unwrap(); }
+pub struct Scanner { buffer: std::collections::VecDeque<String>, buf: String }
+impl Scanner {
+    pub fn new() -> Self { Scanner { buffer: std::collections::VecDeque::new(), buf: String::new() } }
+    pub fn cin<T: std::str::FromStr>(&mut self) -> T {
+        if !self.buffer.is_empty() { return self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap(); }
+        self.buf.truncate(0); std::io::stdin().read_line(&mut self.buf).ok();
+        self.buf.to_owned().split_whitespace().for_each(|x| self.buffer.push_back(String::from(x)));
+        self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
+    }
+    pub fn vec<T: std::str::FromStr>(&mut self, n: usize) -> Vec<T> { (0..n).map(|_| self.cin()).collect() }
+}
