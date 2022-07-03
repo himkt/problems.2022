@@ -1,5 +1,38 @@
+const DIV: usize = 1_000_000_000 + 7;
+
 fn main() {
     let mut scanner = Scanner::new();
+    let s: usize = scanner.cin();
+
+    let mut dp = vec![vec![0; s + 1]; s + 1];
+    for j in 3..=s {
+        dp[1][j] = 1;
+    }
+
+    let ss = s / 3;
+    for i in 2..=ss {
+        if s < 3 * (i - 1) {
+            continue;
+        }
+        let l = 3 * (i - 1);
+        for j in l..=s {
+            for k in 3..=s {
+                if j + k > s {
+                    break;
+                }
+                dp[i][j + k] += dp[i - 1][j];
+                dp[i][j + k] %= DIV;
+            }
+        }
+    }
+
+    let mut ans = 0;
+    for row in dp {
+        ans += row[s];
+        ans %= DIV;
+    }
+
+    println!("{}", ans);
 }
 
 
