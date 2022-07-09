@@ -1,22 +1,3 @@
-pub fn lower_bound(range: std::ops::Range<usize>, prop: &dyn Fn(usize) -> bool) -> usize {
-    if prop(range.start) {
-        return range.start;
-    }
-
-    let mut ng = range.start;
-    let mut ok = range.end;
-
-    while ok - ng > 1 {
-        let middle = ng + (ok - ng) / 2;
-        match prop(middle) {
-            true => ok = middle,
-            false => ng = middle,
-        }
-    }
-
-    ok
-}
-
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
@@ -41,18 +22,21 @@ fn main() {
         }
     }
 
-    let sum: usize = s.iter().take(k - 1).cloned().sum();
+    let s: Vec<usize> = s.iter().take(k - 1).cloned().collect();
+    let sum: usize = s.iter().sum();
 
-    let li = lower_bound(
-        0..(m + 1),
-        &|x| (sum + x) / k >= r,
-    );
+    if k * r < sum {
+        println!("0");
+        return;
+    }
 
-    if li == m + 1 {
+    let ans = k * r - sum;
+
+    if ans > m {
         println!("-1");
     }
     else {
-        println!("{}", li);
+        println!("{}", ans);
     }
 }
 
