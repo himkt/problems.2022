@@ -1,83 +1,51 @@
-use proconio::input;
-use std::{cmp::Ordering, collections::HashSet};
+const MAX: usize = 2_000_000_000_000_000_000;
 
-
-pub trait BinarySearch<T> {
-    fn lower_bound(&self, x: &T) -> usize;
-    fn upper_bound(&self, x: &T) -> usize;
-}
-
-impl<T: Ord> BinarySearch<T> for [T] {
-    fn lower_bound(&self, x: &T) -> usize {
-        let mut low = 0;
-        let mut high = self.len();
-
-        while low != high {
-            let mid = (low + high) / 2;
-            match self[mid].cmp(x) {
-                Ordering::Less => {
-                    low = mid + 1;
-                }
-                Ordering::Equal | Ordering::Greater => {
-                    high = mid;
-                }
-            }
-        }
-        low
+pub fn lower_bound(range: std::ops::Range<usize>, prop: &dyn Fn(usize) -> bool) -> usize {
+    if prop(range.start) {
+        return range.start;
     }
 
-    fn upper_bound(&self, x: &T) -> usize {
-        let mut low = 0;
-        let mut high = self.len();
+    let mut ng = range.start;
+    let mut ok = range.end;
 
-        while low != high {
-            let mid = (low + high) / 2;
-            match self[mid].cmp(x) {
-                Ordering::Less | Ordering::Equal => {
-                    low = mid + 1;
-                }
-                Ordering::Greater => {
-                    high = mid;
-                }
-            }
+    while ok - ng > 1 {
+        let middle = ng + (ok - ng) / 2;
+        match prop(middle) {
+            true => ok = middle,
+            false => ng = middle,
         }
-        low
     }
+
+    ok
 }
 
-
+#[allow(clippy::needless_range_loop)]
 fn main() {
-    input! {
-        n: usize,
-        q: usize,
-        a: [i64; n],
-        q: [i64; q],
-    }
+    let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+    let q: usize = scanner.cin();
+    let a: Vec<usize> = scanner.vec(n);
 
-    let mut ah = HashSet::<i64>::new();
-    for ai in a.clone().into_iter() {
-        ah.insert(ai);
-    }
-
-    for qi in q.iter() {
-        let mut low = 1e0 as i64;
-        let mut upp = 2e18 as i64;
-
-        while low != upp {
-            let mid = (low+upp) / 2;
-            let a_min_index = a.lower_bound(&mid) as i64;
-
-            if &(mid - a_min_index) == qi && !ah.contains(&mid) {
-                low = mid;
-                break;
-            }
-            else if &(mid - a_min_index) > qi {
-                upp = mid;
-            }
-            else {
-                low = mid;
-            }
-        }
-        println!("{}", low);
+    for _ in 0..q {
+        let k: usize = scanner.cin();
+        let l = lower_bound(0..MAX, &|x| {
+            let buf = lower_bound(0..n, &|y| x < a[y]);
+            x - buf >= k
+        });
+        println!("{}", l);
     }
 }
+
+use std::io::Write; pub fn flush() { std::io::stdout().flush().unwrap(); }
+pub struct Scanner { buffer: std::collections::VecDeque<String>, buf: String }
+impl Scanner {
+    pub fn new() -> Self { Scanner { buffer: std::collections::VecDeque::new(), buf: String::new() } }
+    pub fn cin<T: std::str::FromStr>(&mut self) -> T {
+        if !self.buffer.is_empty() { return self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap(); }
+        self.buf.truncate(0); std::io::stdin().read_line(&mut self.buf).ok();
+        self.buf.to_owned().split_whitespace().for_each(|x| self.buffer.push_back(String::from(x)));
+        self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
+    }
+    pub fn vec<T: std::str::FromStr>(&mut self, n: usize) -> Vec<T> { (0..n).map(|_| self.cin()).collect() }
+}
+
