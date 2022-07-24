@@ -1,174 +1,148 @@
 #[derive(Debug, Clone)]
-pub struct RMaxQ {
+pub struct SegmentTree {
     v: Vec<i64>,
-}
-
-impl Default for RMaxQ {
-    fn default() -> Self {
-        RMaxQ::new()
-    }
-}
-
-impl RMaxQ {
-    const SEQ_LEN: usize = 1<<19;
-    const UNIT_VAL: i64 = - 1_000_000_000;
-
-    pub fn new() -> Self {
-        Self {
-            v: vec![RMaxQ::UNIT_VAL; 2 * RMaxQ::SEQ_LEN],
-        }
-    }
-
-    /// Add `value` to i-th element.
-    /// 0-origin.
-    pub fn update(&mut self, mut index: usize, value: i64) {
-        index += RMaxQ::SEQ_LEN;
-        self.v[index] = value;
-
-        while index > 0 {
-            index /= 2;
-            self.v[index] = self.v[index * 2].max(self.v[index * 2 + 1]);
-        }
-    }
-
-    /// Sum values on `[l, r)`. Note that it is a half-open interval.
-    /// 0-origin.
-    pub fn max(&self, l: usize, r: usize) -> i64 {
-        self._max(l, r, 0, RMaxQ::SEQ_LEN, 1)
-    }
-
-    fn _max(&self, ql: usize, qr: usize, sl: usize, sr: usize, pos: usize) -> i64 {
-        if qr <= sl || sr <= ql {
-            return RMaxQ::UNIT_VAL;
-        }
-        if ql <= sl && sr <= qr {
-            return self.v[pos];
-        }
-
-        let sm = (sl + sr) / 2;
-        let lv = self._max(ql, qr, sl, sm, pos * 2);
-        let rv = self._max(ql, qr, sm, sr, pos * 2 + 1);
-        lv.max(rv)
-    }
+    op: Op,
 }
 
 #[derive(Debug, Clone)]
-pub struct RMinQ {
-    v: Vec<i64>,
+pub enum Op {
+    Max,
+    Min,
+    Add,
 }
 
-impl Default for RMinQ {
-    fn default() -> Self {
-        RMinQ::new()
-    }
-}
+impl SegmentTree {
+    const SEQ_LEN: usize = 1<<20;
+    const MAX: i64 =   1_000_000_000_000;
+    const MIN: i64 = - 1_000_000_000_000;
 
-impl RMinQ {
-    const SEQ_LEN: usize = 1<<19;
-    const UNIT_VAL: i64 = 1_000_000_000;
+    pub fn new(op: Op) -> Self {
+        let default = match &op {
+            Op::Add => { 0 },
+            Op::Max => { SegmentTree::MIN },
+            Op::Min => { SegmentTree::MAX },
+        };
 
-    pub fn new() -> Self {
         Self {
-            v: vec![RMinQ::UNIT_VAL; 2 * RMinQ::SEQ_LEN],
+            v: vec![default; 2 * SegmentTree::SEQ_LEN],
+            op,
         }
     }
 
-    /// Add `value` to i-th element.
+    /// Update an i-th element to `value`.
     /// 0-origin.
-    pub fn update(&mut self, mut index: usize, value: i64) {
-        index += RMinQ::SEQ_LEN;
-        self.v[index] = value;
+    pub fn update_one(&mut self, mut index: usize, value: i64) {
+        index += SegmentTree::SEQ_LEN;
+
+        match &self.op {
+            Op::Add => {
+                self.v[index] += value;
+            },
+            _ => {
+                self.v[index] = value;
+            }
+        };
 
         while index > 0 {
             index /= 2;
-            self.v[index] = self.v[index * 2].min(self.v[index * 2 + 1]);
+            let lv = self.v[index * 2];
+            let rv = self.v[index * 2 + 1];
+
+            match &self.op {
+                Op::Add => {
+                    self.v[index] = lv + rv;
+                }
+                Op::Max => {
+                    self.v[index] = lv.max(rv);
+                },
+                Op::Min => {
+                    self.v[index] = lv.min(rv);
+                },
+            };
         }
     }
 
-    /// Sum values on `[l, r)`. Note that it is a half-open interval.
+    /// Run a range query on `[l, r)`. Note that it is a half-open interval.
     /// 0-origin.
-    pub fn min(&self, l: usize, r: usize) -> i64 {
-        self._min(l, r, 0, RMinQ::SEQ_LEN, 1)
+    pub fn op(&self, l: usize, r: usize) -> i64 {
+        self._op(l, r, 0, SegmentTree::SEQ_LEN, 1)
     }
 
-    fn _min(&self, ql: usize, qr: usize, sl: usize, sr: usize, pos: usize) -> i64 {
+    fn _op(&self, ql: usize, qr: usize, sl: usize, sr: usize, pos: usize) -> i64 {
         if qr <= sl || sr <= ql {
-            return RMinQ::UNIT_VAL;
+            return match &self.op {
+                Op::Add => 0,
+                Op::Max => SegmentTree::MIN,
+                Op::Min => SegmentTree::MAX,
+            };
         }
         if ql <= sl && sr <= qr {
             return self.v[pos];
         }
 
         let sm = (sl + sr) / 2;
-        let lv = self._min(ql, qr, sl, sm, pos * 2);
-        let rv = self._min(ql, qr, sm, sr, pos * 2 + 1);
-        lv.min(rv)
+        let lv = self._op(ql, qr, sl, sm, pos * 2);
+        let rv = self._op(ql, qr, sm, sr, pos * 2 + 1);
+
+        match &self.op {
+            Op::Add => { lv + rv },
+            Op::Max => { lv.max(rv) },
+            Op::Min => { lv.min(rv) },
+        }
     }
 }
+
 
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
     let a: Vec<i64> = scanner.vec(n);
-    let mut b: Vec<i64> = vec![0; n];
-    
-    for i in 0..n {
-        if a[i] == 1 {
-            b[i] = - 1;
-        }
-        else {
-            b[i] = 1;
-        }
-    }
 
-    let mut c: Vec<i64> = vec![0; n];
-    c[0] = b[0];
+    let mut cum: Vec<i64> = a
+        .iter()
+        .map(|&x| match x { 0 => 1, 1 => -1, _ => panic!() })
+        .collect();
 
     for i in 1..n {
-        c[i] = b[i] + c[i - 1];
+        cum[i] += cum[i - 1];
     }
 
-    let mut rmaxq = RMaxQ::new();
-    let mut rminq = RMinQ::new();
+    let mut rminq = SegmentTree::new(Op::Min);
+    let mut rmaxq = SegmentTree::new(Op::Max);
+
     for i in 0..n {
-        rmaxq.update(i, c[i]);
-        rminq.update(i, c[i]);
+        rminq.update_one(i, cum[i]);
+        rmaxq.update_one(i, cum[i]);
     }
 
-    let mut maxv = 0;
-    let mut minv = 0;
+    let mut max = cum.iter().cloned().max().unwrap();
+    let mut min = cum.iter().cloned().min().unwrap();
 
-    let mut cur = 0;
-    for i in 0..n {
-        let u = rmaxq.max(i, n);
-        let l = rminq.min(i, n);
-        maxv = maxv.max(u - cur);
-        minv = minv.min(l - cur);
-        cur += b[i];
+    for i in (0..n).rev() {
+        let lv = cum[i];
+        let rv = rminq.op(0, i + 1);
+        max = max.max(lv - rv);
+
+        let lv = cum[i];
+        let rv = rmaxq.op(0, i + 1);
+        min = min.min(lv - rv);
     }
 
-    println!("{}", maxv - minv + 1);
+    let ans = max - min + 1;
+    println!("{}", ans);
 }
 
-use std::io::Write;
-pub fn flush() { std::io::stdout().flush().unwrap(); }
-pub struct Scanner { stdin: std::io::Stdin, buffer: std::collections::VecDeque<String> }
+use std::io::Write; pub fn flush() { std::io::stdout().flush().unwrap(); }
+pub struct Scanner { buffer: std::collections::VecDeque<String>, buf: String }
 impl Scanner {
-    fn new() -> Self {
-        Self { stdin: std::io::stdin(), buffer: std::collections::VecDeque::new() }
-    }
-
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self { Scanner { buffer: std::collections::VecDeque::new(), buf: String::new() } }
     pub fn cin<T: std::str::FromStr>(&mut self) -> T {
-        while self.buffer.is_empty() {
-            let mut line = String::new();
-            let _ = self.stdin.read_line(&mut line);
-            line.split_whitespace().for_each(|x| self.buffer.push_back(String::from(x)));
-        }
+        if !self.buffer.is_empty() { return self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap(); }
+        self.buf.truncate(0); std::io::stdin().read_line(&mut self.buf).ok();
+        self.buf.to_owned().split_whitespace().for_each(|x| self.buffer.push_back(String::from(x)));
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
     }
-
-    pub fn vec<T: std::str::FromStr>(&mut self, n: usize) -> Vec<T> {
-        (0..n).map(|_| self.cin()).collect()
-    }
+    pub fn vec<T: std::str::FromStr>(&mut self, n: usize) -> Vec<T> { (0..n).map(|_| self.cin()).collect() }
 }
