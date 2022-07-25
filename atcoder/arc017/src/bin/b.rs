@@ -1,97 +1,50 @@
-pub fn lower_bound(range: std::ops::Range<usize>, prop: &dyn Fn(usize) -> bool) -> usize {
-    if prop(range.start) {
-        range.start
-    }
-    else {
-        let mut ng = range.start;
-        let mut ok = range.end;
-
-        while ok - ng > 1 {
-            let middle = ng + (ok - ng) / 2;
-
-            if prop(middle) {
-                ok = middle;
-            }
-            else {
-                ng = middle;
-            }
-        }
-
-        ok
-    }
-}
-
-
 #[allow(clippy::needless_range_loop)]
+#[allow(clippy::collapsible_else_if)]
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
     let k: usize = scanner.cin();
-    let a: Vec<usize> = scanner.vec(n);
+    let a: Vec<usize> = (0..n)
+        .map(|_| scanner.cin::<usize>())
+        .collect();
 
-    let mut ds = vec![];
-    for i in 1..n {
-        if a[i] <= a[i-1] {
-            ds.push(i);
-        }
-    }
-
-    if ds.is_empty() {
-        ds.push(n);
+    if k == 1 {
+        println!("{}", n);
+        return;
     }
 
     let mut ans = 0;
-    for i in 0..n {
-        let ds_i = lower_bound(0..ds.len(), &|x| i < ds[x]);
-        let j = if ds_i == ds.len() { n } else { ds[ds_i] };
-        if j - i >= k { ans += 1; }
+
+    let mut cnt = 1;
+    let mut prv = a[0];
+
+    for i in 1..n {
+        if a[i] > prv {
+            cnt += 1;
+
+            if cnt >= k {
+                ans += 1;
+            }
+        }
+        else {
+            cnt = 1;
+        }
+
+        prv = a[i];
     }
 
     println!("{}", ans);
 }
 
-
-use std::collections::VecDeque;
-use std::io::{self, Write};
-use std::str::FromStr;
-
-#[allow(dead_code)]
-struct Scanner {
-    stdin: io::Stdin,
-    buffer: VecDeque<String>,
-}
-#[allow(dead_code)]
+use std::io::Write; pub fn flush() { std::io::stdout().flush().unwrap(); }
+pub struct Scanner { buffer: std::collections::VecDeque<String>, buf: String }
 impl Scanner {
-    fn new() -> Self {
-        Self { stdin: io::stdin(), buffer: VecDeque::new() }
-    }
-
-    fn cin<T: FromStr>(&mut self) -> T {
-        while self.buffer.is_empty() {
-            let mut line = String::new();
-            let _ = self.stdin.read_line(&mut line);
-            for w in line.split_whitespace() {
-                self.buffer.push_back(String::from(w));
-            }
-        }
+    pub fn new() -> Self { Scanner { buffer: std::collections::VecDeque::new(), buf: String::new() } }
+    pub fn cin<T: std::str::FromStr>(&mut self) -> T {
+        if !self.buffer.is_empty() { return self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap(); }
+        self.buf.truncate(0); std::io::stdin().read_line(&mut self.buf).ok();
+        self.buf.to_owned().split_whitespace().for_each(|x| self.buffer.push_back(String::from(x)));
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
     }
-
-    fn vec<T: FromStr>(&mut self, n: usize) -> Vec<T> {
-        (0..n).map(|_| self.cin()).collect()
-    }
-}
-
-#[allow(dead_code)]
-fn flush() {
-    std::io::stdout().flush().unwrap();
-}
-
-#[macro_export]
-macro_rules! trace {
-    ($x:expr) => {
-        #[cfg(debug_assertions)]
-        eprintln!(">>> {} = {:?}", stringify!($x), $x)
-    };
-    ($($xs:expr),*) => { trace!(($($xs),*)) }
+    pub fn vec<T: std::str::FromStr>(&mut self, n: usize) -> Vec<T> { (0..n).map(|_| self.cin()).collect() }
 }
