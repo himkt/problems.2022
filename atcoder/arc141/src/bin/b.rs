@@ -1,5 +1,5 @@
 const DIV: usize = 998244353;
-
+const MAX: usize = 61;
 
 #[allow(clippy::needless_range_loop)]
 fn main() {
@@ -12,70 +12,72 @@ fn main() {
         return;
     }
 
-    let mut dp = vec![vec![0; 61]; n];
-    dp[0][1] = 1;
-
-    let mut p = 2;  // p=2^(k-1)
-    for k in 2..61 {
-        if p > m {
-            dp[0][k] = 0;
+    let mut sizes = vec![0; MAX];
+    for j in 1..MAX {
+        if (1 << j) - 1 < m {
+            sizes[j] = (1 << j) - (1 << (j - 1));
+            sizes[j] %= DIV;
         }
         else {
-            let q = 2 * p;  // q=2^k
-            dp[0][k] = (q - 1).min(m) - p + 1;
-            dp[0][k] %= DIV;
+            sizes[j] = m - (1 << (j - 1)) + 1;
+            sizes[j] %= DIV;
+            break;
         }
-        p *= 2;
     }
 
+    let mut dp = vec![vec![0; MAX]; MAX];
+    dp[0] = sizes.clone();
+
     for i in 1..n {
-        for k in 1..61 {
-            for j in 1..k {
-                dp[i][k] += dp[0][k] * dp[i-1][j];
-                dp[i][k] %= DIV;
+        for j in 1..MAX {
+            let mut ret = 0;
+            for k in 1..j {
+                ret += dp[i - 1][k];
+                ret %= DIV;
             }
+            dp[i][j] = sizes[j] * ret;
+            dp[i][j] %= DIV;
         }
     }
 
     let mut ans = 0;
-    for j in 0..61 {
-        ans += dp[n-1][j];
+    for v in dp[n - 1].iter() {
+        ans += v;
         ans %= DIV;
     }
 
     println!("{}", ans);
 }
 
-
-use std::collections::VecDeque;
-use std::io::{self, Write};
-use std::str::FromStr;
-
+use std::io::Write;
 pub struct Scanner {
-    stdin: io::Stdin,
-    buffer: VecDeque<String>,
+    buffer: std::collections::VecDeque<String>,
+    buf: String,
 }
+#[allow(clippy::new_without_default)]
 impl Scanner {
-    fn new() -> Self {
-        Self { stdin: io::stdin(), buffer: VecDeque::new() }
-    }
-
-    pub fn cin<T: FromStr>(&mut self) -> T {
-        while self.buffer.is_empty() {
-            let mut line = String::new();
-            let _ = self.stdin.read_line(&mut line);
-            for w in line.split_whitespace() {
-                self.buffer.push_back(String::from(w));
-            }
+    pub fn new() -> Self {
+        Scanner {
+            buffer: std::collections::VecDeque::new(),
+            buf: String::new(),
         }
+    }
+    pub fn cin<T: std::str::FromStr>(&mut self) -> T {
+        if !self.buffer.is_empty() {
+            return self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap();
+        }
+        self.buf.truncate(0);
+        std::io::stdin().read_line(&mut self.buf).ok();
+        self.buf
+            .to_owned()
+            .split_whitespace()
+            .for_each(|x| self.buffer.push_back(String::from(x)));
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
     }
-
-    pub fn vec<T: FromStr>(&mut self, n: usize) -> Vec<T> {
+    pub fn vec<T: std::str::FromStr>(&mut self, n: usize) -> Vec<T> {
         (0..n).map(|_| self.cin()).collect()
     }
-}
-
-pub fn flush() {
-    std::io::stdout().flush().unwrap();
+    pub fn flush(&self) {
+        std::io::stdout().flush().unwrap();
+    }
 }
