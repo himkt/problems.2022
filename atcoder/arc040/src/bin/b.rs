@@ -3,79 +3,65 @@ fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
     let r: usize = scanner.cin();
-
-    let mut cs: Vec<char> = scanner.cin::<String>().chars().collect();
-    let mut record_time = 0;
-    let mut current_time = 0;
-    let mut i = 0;
-
-    let last_idx_option = cs
+    let mut s: Vec<char> = scanner.cin::<String>().chars().collect();
+    let rmax = s
         .iter()
         .enumerate()
         .filter(|&(_, c)| c == &'.')
         .map(|(i, _)| i)
-        .last();
+        .max();
 
-    while i < n {
-        let max_target_idx = (i + r - 1).min(n-1);
-
-        if let Some(last_idx) = last_idx_option {
-            if last_idx <= max_target_idx {
-                current_time += 1;
-                record_time = current_time;
-                break;
+    if let Some(rmax) = rmax {
+        let mut ans = 0;
+        for i in 0..n {
+            if i + r > rmax {
+                ans += 1;
+                println!("{}", ans);
+                return;
             }
-        }
-
-        if cs[i] == 'o' {
-            current_time += 1;
-            i += 1;
-        }
-        else {
-            for diff in 0..r {
-                if i + diff == n {
-                    break;
+            if s[i] == '.' {
+                for d in 0..r {
+                    s[i + d] = 'o';
                 }
-                cs[i + diff] = 'o';
+                ans += 1;
             }
-            current_time += 1;
-            record_time = current_time;
+            ans += 1;
         }
     }
-
-    println!("{}", record_time);
+    else {
+        println!("0");
+    }
 }
 
-
-use std::collections::VecDeque;
-use std::io::{self, Write};
-use std::str::FromStr;
-
+use std::io::Write;
 pub struct Scanner {
-    stdin: io::Stdin,
-    buffer: VecDeque<String>,
+    buffer: std::collections::VecDeque<String>,
+    buf: String,
 }
+#[allow(clippy::new_without_default)]
 impl Scanner {
-    fn new() -> Self {
-        Self { stdin: io::stdin(), buffer: VecDeque::new() }
-    }
-
-    pub fn cin<T: FromStr>(&mut self) -> T {
-        while self.buffer.is_empty() {
-            let mut line = String::new();
-            let _ = self.stdin.read_line(&mut line);
-            for w in line.split_whitespace() {
-                self.buffer.push_back(String::from(w));
-            }
+    pub fn new() -> Self {
+        Scanner {
+            buffer: std::collections::VecDeque::new(),
+            buf: String::new(),
         }
+    }
+    pub fn cin<T: std::str::FromStr>(&mut self) -> T {
+        if !self.buffer.is_empty() {
+            return self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap();
+        }
+        self.buf.truncate(0);
+        std::io::stdin().read_line(&mut self.buf).ok();
+        self.buf
+            .to_owned()
+            .split_whitespace()
+            .for_each(|x| self.buffer.push_back(String::from(x)));
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
     }
-
-    pub fn vec<T: FromStr>(&mut self, n: usize) -> Vec<T> {
+    pub fn vec<T: std::str::FromStr>(&mut self, n: usize) -> Vec<T> {
         (0..n).map(|_| self.cin()).collect()
     }
-}
-
-pub fn flush() {
-    std::io::stdout().flush().unwrap();
+    pub fn flush(&self) {
+        std::io::stdout().flush().unwrap();
+    }
 }
