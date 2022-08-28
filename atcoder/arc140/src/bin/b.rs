@@ -1,71 +1,121 @@
+#[derive(PartialEq, Eq, Debug)]
+pub enum State {
+    O,
+    A,
+    R,
+    C,
+}
+
 #[allow(clippy::needless_range_loop)]
-#[allow(clippy::collapsible_else_if)]
 fn main() {
     let mut scanner = Scanner::new();
-    let n: usize = scanner.cin();
-    let s: String = scanner.cin();
-    let s: Vec<char> = s.chars().collect();
+    let _: usize = scanner.cin();
+    let s: Vec<char> = scanner.cin::<String>().chars().collect();
 
-    let mut queue_even = VecDeque::new();
-    let mut queue_odd = VecDeque::new();
+    let mut num_a = 0;
+    let mut num_c = 0;
+    let mut prev_state = State::O;
 
-    for i in 1..s.len()-1 {
-        if s[i-1] == 'A' && s[i] == 'R' && s[i+1] == 'C' {
-            if i - 1 == 0 || i + 1 == n - 1 {
-                queue_odd.push_back((i-1, i+1));
-            }
-            else if s[i - 2] == 'A' && s[i + 2] == 'C' {
-                queue_even.push_back((i-1, i+1));
-            }
-            else {
-                queue_odd.push_back((i-1, i+1));
-            }
+    // construction
+    let mut vs = vec![];
+    for ci in s {
+        match ci {
+            'A' => {
+                if prev_state == State::A {
+                    num_a += 1;
+                    num_c = 0;
+                }
+                else {
+                    let v = num_a.min(num_c);
+                    vs.push(v);
+                    num_a = 1;
+                    num_c = 0;
+                }
+            },
+            'R' => {
+                if prev_state == State::A {
+                    num_c = 0;
+                }
+                else {
+                    let v = num_a.min(num_c);
+                    vs.push(v);
+                    num_a = 0;
+                    num_c = 0;
+                }
+            },
+            'C' => {
+                if prev_state == State::R {
+                    num_c = 1;
+                }
+                else if prev_state == State::C {
+                    num_c += 1;
+                }
+                else {
+                    let v = num_a.min(num_c);
+                    vs.push(v);
+                    num_a = 0;
+                    num_c = 0;
+                }
+            },
+            _   => { panic!() },
+        }
+
+        prev_state = match ci {
+            'A' => State::A,
+            'R' => State::R,
+            'C' => State::C,
+            _   => panic!(),
         }
     }
 
+    let v = num_a.min(num_c);
+    vs.push(v);
+
+    // calculation
     let mut ans = 0;
-    for i in 1..=n {
-        if queue_even.is_empty() && queue_odd.is_empty() { break; }
+    let mut num_singular = 0;
+    let mut deque = VecDeque::new();
 
-        let selected_queue_index = if i % 2 == 1 {
-            if !queue_even.is_empty() {
-                0  // even
+    vs.sort_unstable();
+    for v in vs {
+        if v == 1 {
+            num_singular += 1;
+        }
+        else if v > 1 {
+            deque.push_back(v);
+        }
+    }
+
+    for i in 1..=200_000 {
+        if i % 2 == 1 {
+            if !deque.is_empty() {
+                deque[0] -= 1;
+                if deque[0] == 1 {
+                    deque.pop_front();
+                    num_singular += 1;
+                }
+                ans += 1;
+            }
+            else if num_singular > 0 {
+                num_singular -= 1;
+                ans += 1;
             }
             else {
-                1  // odd
+                break;
             }
         }
         else {
-            if !queue_odd.is_empty() {
-                1  // odd
+            if num_singular > 0 {
+                num_singular -= 1;
+                ans += 1;
+            }
+            else if !deque.is_empty() {
+                deque[0] -= 1;
+                deque.pop_front();
+                ans += 1;
             }
             else {
-                0  // even
-            }
-        };
-
-        let head = if selected_queue_index == 0 {
-            queue_even.pop_front().unwrap()
-        }
-        else {
-            queue_odd.pop_front().unwrap()
-        };
-
-        ans += 1;
-
-        if head.0 == 0 || head.1 == n - 1 {
-            continue;
-        }
-
-        if i % 2 == 1 && s[head.0 - 1] == 'A' && s[head.1 + 1] == 'C' {
-            if head.0 - 1 == 0 || head.1 + 1 == n - 1 {
-                queue_odd.push_back((head.0 - 1, head.1 + 1));
-            }
-            else if s[head.0 - 2] == 'A' && s[head.1 + 2] == 'C' {
-                queue_even.push_back((head.0 - 1, head.1 + 1));
-            }
-            else {
-                queue_odd.push_back((head.0 - 1, head.1 + 1));
+                break;
             }
         }
     }
@@ -73,36 +123,36 @@ fn main() {
     println!("{}", ans);
 }
 
-
-use std::collections::{VecDeque};
-use std::io::{self, Write};
-use std::str::FromStr;
-
+use std::{io::Write, collections::VecDeque};
 pub struct Scanner {
-    stdin: io::Stdin,
-    buffer: VecDeque<String>,
+    buffer: std::collections::VecDeque<String>,
+    buf: String,
 }
+#[allow(clippy::new_without_default)]
 impl Scanner {
-    fn new() -> Self {
-        Self { stdin: io::stdin(), buffer: VecDeque::new() }
-    }
-
-    pub fn cin<T: FromStr>(&mut self) -> T {
-        while self.buffer.is_empty() {
-            let mut line = String::new();
-            let _ = self.stdin.read_line(&mut line);
-            for w in line.split_whitespace() {
-                self.buffer.push_back(String::from(w));
-            }
+    pub fn new() -> Self {
+        Scanner {
+            buffer: std::collections::VecDeque::new(),
+            buf: String::new(),
         }
+    }
+    pub fn cin<T: std::str::FromStr>(&mut self) -> T {
+        if !self.buffer.is_empty() {
+            return self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap();
+        }
+        self.buf.truncate(0);
+        std::io::stdin().read_line(&mut self.buf).ok();
+        self.buf
+            .to_owned()
+            .split_whitespace()
+            .for_each(|x| self.buffer.push_back(String::from(x)));
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
     }
-
-    pub fn vec<T: FromStr>(&mut self, n: usize) -> Vec<T> {
+    pub fn vec<T: std::str::FromStr>(&mut self, n: usize) -> Vec<T> {
         (0..n).map(|_| self.cin()).collect()
+    }
+    pub fn flush(&self) {
+        std::io::stdout().flush().unwrap();
     }
 }
 
-pub fn flush() {
-    std::io::stdout().flush().unwrap();
-}
