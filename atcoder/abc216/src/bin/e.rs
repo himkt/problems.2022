@@ -31,17 +31,14 @@ fn main() {
     for i in 1..n {
         if a[i] != prev_height {
             let budget = width * (prev_height - a[i]);
-            //println!("k={}, width={}, prev_height={}, a[i]={}, budget={}", k, width, prev_height, a[i], budget);
             if k <= budget {
                 let d = prev_height - a[i];
                 let n = lower_bound(0..(d + 1), &|x| x * width > k) - 1;
                 let v = width * (n * (prev_height + prev_height - n + 1) / 2);
-                //println!("[a] d={}, n={}, v={}", d, n, v);
                 ans += v;
                 k -= width * n;
 
                 ans += (prev_height - n) * k;
-                //println!("[a] prev_height={}, k={}", prev_height, k);
                 println!("{}", ans);
                 return;
             }
@@ -49,7 +46,6 @@ fn main() {
                 k -= budget;
                 let n = prev_height - a[i];
                 let v = width * (n * (prev_height + a[i] + 1) / 2);
-                //println!("[b] n={}, v={}, prev_height={}, a[i]={}", n, v, prev_height, a[i]);
                 ans += v;
             }
         }
@@ -57,18 +53,14 @@ fn main() {
         prev_height = a[i];
     }
 
-    //println!("k={}, prev_height={}, width={}, ans={}", k, prev_height, width, ans);
     if k > 0 {
         let d = prev_height;
         let n = lower_bound(0..(d + 1), &|x| x * width > k) - 1;
-        //println!("n={}", n);
         let v = width * (n * (prev_height + prev_height - n + 1) / 2);
-        //println!("d={}, n={}, v={}", d, n, v);
         ans += v;
         k -= width * n;
 
         if k < width {
-            //println!("k={}, prev_height={}", k, prev_height);
             ans += (prev_height - n) * k;
         }
     }
