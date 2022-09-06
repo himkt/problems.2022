@@ -1,49 +1,75 @@
+pub fn lower_bound(range: std::ops::Range<usize>, prop: &dyn Fn(usize) -> bool) -> usize {
+    if prop(range.start) {
+        return range.start;
+    }
+
+    let mut ng = range.start;
+    let mut ok = range.end;
+
+    while ok - ng > 1 {
+        let middle = ng + (ok - ng) / 2;
+        match prop(middle) {
+            true => ok = middle,
+            false => ng = middle,
+        }
+    }
+
+    ok
+}
+
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
     let mut k: usize = scanner.cin();
-    let a: Vec<usize> = scanner.vec(n);
+    let mut a: Vec<usize> = scanner.vec(n);
+    a.sort_unstable_by_key(|&x| Reverse(x));
 
-    let mut heap = BinaryHeap::new();
-    for ai in a { heap.push(ai); }
+    let mut width = 1;
+    let mut prev_height = a[0];
 
     let mut ans = 0;
-    let mut t = 0;
+    for i in 1..n {
+        if a[i] != prev_height {
+            let budget = width * (prev_height - a[i]);
+            //println!("k={}, width={}, prev_height={}, a[i]={}, budget={}", k, width, prev_height, a[i], budget);
+            if k <= budget {
+                let d = prev_height - a[i];
+                let n = lower_bound(0..(d + 1), &|x| x * width > k) - 1;
+                let v = width * (n * (prev_height + prev_height - n + 1) / 2);
+                //println!("[a] d={}, n={}, v={}", d, n, v);
+                ans += v;
+                k -= width * n;
 
-    loop {
-        if heap.is_empty() { break; }
-
-        let v = heap.pop().unwrap();
-        t += 1;
-
-        while let Some(&nv) = heap.peek() {
-            if nv != v {
-                break;
+                ans += (prev_height - n) * k;
+                //println!("[a] prev_height={}, k={}", prev_height, k);
+                println!("{}", ans);
+                return;
             }
-
-            heap.pop();
-            t += 1;
+            else {
+                k -= budget;
+                let n = prev_height - a[i];
+                let v = width * (n * (prev_height + a[i] + 1) / 2);
+                //println!("[b] n={}, v={}, prev_height={}, a[i]={}", n, v, prev_height, a[i]);
+                ans += v;
+            }
         }
+        width += 1;
+        prev_height = a[i];
+    }
 
-        let d = if heap.is_empty() {
-            v
-        }
-        else {
-            v - heap.peek().unwrap()
-        };
+    //println!("k={}, prev_height={}, width={}, ans={}", k, prev_height, width, ans);
+    if k > 0 {
+        let d = prev_height;
+        let n = lower_bound(0..(d + 1), &|x| x * width > k) - 1;
+        //println!("n={}", n);
+        let v = width * (n * (prev_height + prev_height - n + 1) / 2);
+        //println!("d={}, n={}, v={}", d, n, v);
+        ans += v;
+        k -= width * n;
 
-        if k >= t * d {
-            let s = d * (2*v - d + 1) / 2;
-            ans += t * s;
-            k -= t * d;
-        }
-        else {
-            let p = k / t;
-            let q = k - p * t;
-
-            ans += t * p * (2*v - p + 1) / 2;
-            ans += q * (v - p);
-            break;
+        if k < width {
+            //println!("k={}, prev_height={}", k, prev_height);
+            ans += (prev_height - n) * k;
         }
     }
 
@@ -51,7 +77,8 @@ fn main() {
 }
 
 
-use std::collections::{VecDeque, BinaryHeap};
+use std::cmp::Reverse;
+use std::collections::VecDeque;
 use std::io::{self, Write};
 use std::str::FromStr;
 
