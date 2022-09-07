@@ -3,74 +3,58 @@ fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
 
-    let mut avs: Vec<i64> = vec![0; n];
-    let mut bvs: Vec<i64> = vec![0; n];
+    let mut avs = vec![];
+    let mut bvs = vec![];
+    for _ in 0..n {
+        let ai: i64 = scanner.cin();
+        let bi: i64 = scanner.cin();
+        avs.push(ai);
+        bvs.push(bi);
+    }
 
-    let mut diff_s: Vec<(i64, i64, usize)> = vec![(0, 0, 0); n];
-    let mut diff_t: Vec<(i64, i64, usize)> = vec![(0, 0, 0); n];
-
+    let mut a_gain = BinaryHeap::new();
+    let mut b_gain = BinaryHeap::new();
     for i in 0..n {
-        let a: i64 = scanner.cin();
-        let b: i64 = scanner.cin();
-        avs[i] = a;
-        bvs[i] = b;
-
-        diff_s[i] = (a + b, a, i);
-        diff_t[i] = (a + b, b, i)
+        let ai = avs[i];
+        let bi = bvs[i];
+        a_gain.push((ai + bi, ai, i));
+        b_gain.push((ai + bi, bi, i));
     }
 
-    diff_s.sort_by_key(|&(v, a, _)| (Reverse(v), Reverse(a)));
-    diff_t.sort_by_key(|&(v, b, _)| (Reverse(v), Reverse(b)));
+    let mut used = HashSet::new();
+    let mut cur = 0;
+    let mut ascore = 0;
+    let mut bscore = 0;
 
-    let mut score_s = 0;
-    let mut score_t = 0;
-
-    let mut cursor_s = 0;
-    let mut cursor_t = 0;
-    let mut used = vec![false; n];
-
-    loop {
-        loop {
-            if cursor_s == n { break; }
-            let (_, v, i) = diff_s[cursor_s];
-
-            if used[i] {
-                cursor_s += 1;
+    while cur < n {
+        while let Some((_, _, i)) = a_gain.pop() {
+            if used.contains(&i) {
                 continue;
             }
 
-            score_s += v;
-            used[i] = true;
-            cursor_s += 1;
+            ascore += avs[i];
+            used.insert(i);
+            cur += 1;
             break;
         }
 
-        loop {
-            if cursor_t == n { break; }
-            let (_, v, i) = diff_t[cursor_t];
-
-            if used[i] {
-                cursor_t += 1;
+        while let Some((_, _, i)) = b_gain.pop() {
+            if used.contains(&i) {
                 continue;
             }
 
-            score_t += v;
-            used[i] = true;
-            cursor_t += 1;
+            bscore += bvs[i];
+            used.insert(i);
+            cur += 1;
             break;
         }
-
-        if cursor_s == n && cursor_t == n { break; }
     }
 
-
-    let ans = score_s - score_t;
-    println!("{}", ans);
+    println!("{}", ascore - bscore);
 }
 
 
-use std::cmp::Reverse;
-use std::collections::{VecDeque};
+use std::collections::{VecDeque, HashSet, BinaryHeap};
 use std::io::{self, Write};
 use std::str::FromStr;
 
