@@ -1,26 +1,25 @@
-#[allow(clippy::collapsible_else_if)]
 fn main() {
     let mut scanner = Scanner::new();
-    let s: String = scanner.cin();
+    let x: Vec<char> = scanner.cin::<String>().chars().collect();
+    let n: usize = x.len();
 
-    let mut num_t = 0;
-    let mut num_s = 0;
-
-    for si in s.chars() {
-        if si == 'S' {
-            num_s += 1;
+    let mut stack = VecDeque::new();
+    let mut num_pairs = 0;
+    for xi in x {
+        if stack.is_empty() {
+            stack.push_front(xi);
+            continue;
+        }
+        if stack[0] == 'S' && xi == 'T' {
+            stack.pop_front();
+            num_pairs += 1;
         }
         else {
-            if num_s > 0 {
-                num_s -= 1;
-            }
-            else {
-                num_t += 1;
-            }
+            stack.push_front(xi);
         }
     }
 
-    let ans = num_t + num_s;
+    let ans = n - 2 * num_pairs;
     println!("{}", ans);
 }
 
