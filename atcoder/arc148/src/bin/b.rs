@@ -1,6 +1,61 @@
+fn fmin(s: Vec<char>, i: usize) -> String {
+
+    let mut t = vec![];
+    for _ in 0..i {
+        t.push('d');
+    }
+    let mut t: String = t.iter().collect();
+
+    let mut substrings = vec![];
+    for j in i..s.len() {
+        let mut sequence = vec![];
+
+        for k in (i..=j).rev() {
+            if s[k] == 'p' {
+                sequence.push('d');
+            }
+            else {
+                sequence.push('p');
+            }
+        }
+
+        for k in (j + 1)..s.len() {
+            sequence.push(s[k]);
+        }
+
+        let substring: String = sequence.iter().collect();
+        substrings.push(substring);
+    }
+
+    substrings.sort();
+    t += &substrings[0];
+    t
+}
+
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+    let s: Vec<char> = scanner.cin::<String>().chars().collect();
+
+    let mut target = None;
+    for i in 0..n {
+        if s[i] == 'p' {
+            target = Some(i);
+            break;
+        }
+    }
+
+    match target {
+        Some(i) => {
+            let ans = fmin(s, i);
+            println!("{}", ans);
+        },
+        _ => {
+            let ans: String = s.iter().collect();
+            println!("{}", ans);
+        },
+    }
 }
 
 use std::io::Write;
