@@ -1,9 +1,29 @@
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+    let mut a: Vec<usize> = scanner.vec(n);
+    a.sort_unstable();
+
+    let mut ans = 0;
+    let mut deq: VecDeque<usize> = a.into_iter().collect();
+    while deq.len() > 1 {
+        if let (Some(&p), Some(&q)) = (deq.front(), deq.back()) {
+            if q % p > 0 {
+                deq.push_front(q % p);
+            }
+            deq.pop_back();
+            ans += 1;
+        }
+        else {
+            panic!("Should not reach");
+        }
+    }
+
+    println!("{}", ans);
 }
 
-use std::io::Write;
+use std::{io::Write, collections::VecDeque};
 pub struct Scanner {
     buffer: std::collections::VecDeque<String>,
     buf: String,
