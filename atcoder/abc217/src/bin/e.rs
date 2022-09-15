@@ -1,9 +1,37 @@
 fn main() {
     let mut scanner = Scanner::new();
+    let q: usize = scanner.cin();
+    let mut priority_queue = BinaryHeap::new();
+    let mut deque = VecDeque::new();
+
+    for _ in 0..q {
+        let qi: usize = scanner.cin();
+
+        if qi == 1 {
+            let x: usize = scanner.cin();
+            deque.push_back(x);
+        }
+        else if qi == 2 {
+            if !priority_queue.is_empty() {
+                let Reverse(v) = priority_queue.pop().unwrap();
+                println!("{}", v);
+            }
+            else {
+                let v = deque.pop_front().unwrap();
+                println!("{}", v);
+            }
+        }
+        else if qi == 3 {
+            while let Some(v) = deque.pop_front() {
+                priority_queue.push(Reverse(v));
+            }
+        }
+    }
 }
 
 
-use std::collections::VecDeque;
+use std::cmp::Reverse;
+use std::collections::{VecDeque, BinaryHeap};
 use std::io::{self, Write};
 use std::str::FromStr;
 
