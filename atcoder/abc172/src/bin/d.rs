@@ -1,6 +1,18 @@
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+
+    let mut ans = 0;
+    for p in 1..=n {
+        let mut k = 1;
+        while k * p <= n {
+            ans += k * p;
+            k += 1;
+        }
+    }
+
+    println!("{}", ans);
 }
 
 use std::io::Write;
