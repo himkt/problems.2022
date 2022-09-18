@@ -1,6 +1,30 @@
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+    let mut a: Vec<(usize, usize)> = (0..n)
+        .map(|i| {
+            let ai: usize = scanner.cin();
+            (i, ai)
+        })
+        .collect();
+    a.sort_unstable_by_key(|&(_, ai)| ai);
+
+    let mut dp = vec![0; n];
+    dp[0] = 1;
+
+    let mut tot = a[0].1;
+    for i in 1..n {
+        if 2 * tot >= a[i].1 {
+            dp[i] = dp[i - 1] + 1;
+        }
+        else {
+            dp[i] = 1;
+        }
+        tot += a[i].1;
+    }
+
+    println!("{}", dp[n - 1]);
 }
 
 use std::io::Write;
