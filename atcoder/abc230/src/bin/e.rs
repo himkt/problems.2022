@@ -1,4 +1,50 @@
+pub fn lower_bound(range: std::ops::Range<usize>, prop: &dyn Fn(usize) -> bool) -> usize {
+    if prop(range.start) {
+        return range.start;
+    }
+
+    let mut ng = range.start;
+    let mut ok = range.end;
+
+    while ok - ng > 1 {
+        let middle = ng + (ok - ng) / 2;
+        match prop(middle) {
+            true => ok = middle,
+            false => ng = middle,
+        }
+    }
+
+    ok
+}
+
 fn main() {
+    let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+
+    let mut ans = 0;
+    let mut q = 1;
+    let mut upper = n;
+
+    loop {
+        let li = lower_bound(
+            0..n,
+            &|x| {
+                let y = n - x;
+                n / y > q
+            },
+        );
+        let lower = n - li + 1;
+        ans += (upper - lower + 1) * q;
+
+        if lower == 1 {
+            break;
+        }
+
+        upper = lower - 1;
+        q = n / (lower - 1);
+    }
+
+    println!("{}", ans);
 }
 
 
