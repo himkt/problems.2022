@@ -1,8 +1,35 @@
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+    let m: usize = scanner.cin();
+
+    let factors = factors(m);
+    for i in (0..factors.len()).rev() {
+        let p = factors[i];
+
+        if n * p <= m {
+            println!("{}", p);
+            return;
+        }
+    }
 }
 
+fn factors(m: usize) -> Vec<usize> {
+    let mut p = 1;
+    let mut ret = vec![];
+    while p * p <= m {
+        if m % p == 0 {
+            ret.push(p);
+            if p != p / m {
+                ret.push(m / p);
+            }
+        }
+        p += 1;
+    }
+    ret.sort_unstable();
+    ret
+}
 
 use std::collections::VecDeque;
 use std::io::{self, Write};
