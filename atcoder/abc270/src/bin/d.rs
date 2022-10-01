@@ -1,14 +1,59 @@
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+pub enum Turn { T, A }
+
+pub struct Solver {
+    a: Vec<usize>,
+    k: usize,
+    memo: HashMap<(usize, Turn), usize>,
+}
+
+impl Solver {
+    fn new(a: Vec<usize>, k: usize) -> Self {
+        Solver { a, k, memo: HashMap::new() }
+    }
+
+    fn solve(&mut self, n: usize, turn: Turn) -> usize {
+        if n == 0 {
+            return 0;
+        }
+        if self.memo.contains_key(&(n, turn)) {
+            return self.memo[&(n, turn)];
+        }
+
+        let mut vs = vec![];
+        for i in 0..self.k {
+            if n < self.a[i] {
+                continue;
+            }
+            let v = match &turn {
+                Turn::T => self.solve(n - self.a[i], Turn::A) + self.a[i],
+                Turn::A => self.solve(n - self.a[i], Turn::T),
+            };
+            vs.push(v);
+        }
+
+        let ret = match &turn {
+            Turn::T => *vs.iter().max().unwrap(),
+            Turn::A => *vs.iter().min().unwrap(),
+        };
+
+        self.memo.insert((n, turn), ret);
+        ret
+    }
+}
+
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
     let k: usize = scanner.cin();
-    let a: Vec<usize> = scanner.vec(k).into_iter().rev().collect();
-
-    let mut dp = vec![vec![0; k + 1]; n + 1];
+    let a: Vec<usize> = scanner.vec(k);
+    let mut solver = Solver::new(a, k);
+    let ans = solver.solve(n, Turn::T);
+    println!("{}", ans);
 }
 
-use std::{io::Write};
+use std::{io::Write, collections::HashMap};
 pub struct Scanner {
     buffer: std::collections::VecDeque<String>,
     buf: String,
