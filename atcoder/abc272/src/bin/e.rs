@@ -1,58 +1,54 @@
-fn min(a: &[i128], n: usize, c: i128) -> i128 {
-    // println!("c={}", c);
-    let mut st = HashSet::new();
-    for i in 1..=n {
-        let v = a[i - 1] + (i as i128) * c;
-        st.insert(v);
-    }
-
-    // println!("{:?}", st);
-    for i in 0..=1_000_000_000 {
-        if !st.contains(&i) {
-            return i;
-        }
-    }
-
-    panic!();
-}
+const MAX: i128 = 2 * 100_000;
 
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
-    let m: i128 = scanner.cin();
+    let m: usize = scanner.cin();
     let a: Vec<i128> = scanner.vec(n);
 
-    let mut ans: HashMap<i128, i128> = HashMap::new();
-    let mut used = HashSet::new();
+    let mut cnt = HashMap::new();
 
-    for i in 1..=n {
-        if a[i - 1] >= 1 {
-            continue;
-        }
-        if a[i - 1] % i as i128 != 0 {
-            continue;
-        }
+    for i in 0..n {
+        let q = i as i128;
+        let d = q + 1;
 
-        let c = (0 - a[i - 1]) / (i as i128);
-
-        if c > m {
-            continue;
+        let mut ai = a[i];
+        let mut c: usize = 0;
+        if a[i] < 0 {
+            let p = (-a[i] + d as i128 - 1) / d;
+            c += p as usize;
         }
 
-        if used.contains(&c) {
-            continue;
+        debug!("i={}, ai={}, c={}", i, ai, c);
+        if c > 1 {
+            ai += (c as i128 - 1) * d;
+        }
+        if c == 0 {
+            ai -= d;
         }
 
-        let v = min(&a, n, c);
-        // println!("i={}, ai={}, c={}, v={}", i, a[i - 1], c, v);
-        ans.entry(c).and_modify(|e| *e = (*e).min(v)).or_insert(v);
-        used.insert(c);
+        for j in c..=m {
+            ai += d;
+            if ai > MAX {
+                break;
+            }
+            debug!("j={}, ai={}", j, ai);
+            cnt.entry(j).or_insert_with(HashSet::new);
+            cnt.entry(j).and_modify(|e| { let _ = (*e).insert(ai); });
+        }
     }
 
-    for i in 1..=m {
-        if ans.contains_key(&i) {
-            println!("{}", ans[&i]);
+    debug!("cnt={:?}", cnt);
+    for mm in 1..=m {
+        if cnt.contains_key(&mm) {
+            let st = &cnt[&mm];
+            for q in 0..=MAX {
+                if !st.contains(&q) {
+                    println!("{}", q);
+                    break;
+                }
+            }
         }
         else {
             println!("0");
@@ -60,7 +56,7 @@ fn main() {
     }
 }
 
-use std::{io::Write, collections::{HashSet, HashMap}};
+use std::{io::Write, collections::{HashMap, HashSet}};
 pub struct Scanner {
     buffer: std::collections::VecDeque<String>,
     buf: String,
@@ -91,4 +87,16 @@ impl Scanner {
     pub fn flush(&self) {
         std::io::stdout().flush().unwrap();
     }
+}
+
+#[macro_export]
+macro_rules! debug {
+    () => {
+        #[cfg(debug_assertions)]
+        println!();
+    };
+    ($($arg:tt)*) => {
+        #[cfg(debug_assertions)]
+        println!($($arg)*);
+    };
 }
