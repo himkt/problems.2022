@@ -5,11 +5,6 @@ fn main() {
     let h: usize = scanner.cin();
     let w: usize = scanner.cin();
 
-    if h % 3 == 0 || w % 3 == 0 {
-        println!("0");
-        return;
-    }
-
     // horizontal
     let p = (w + 2) / 3;
     let q = w - 2 * p;
