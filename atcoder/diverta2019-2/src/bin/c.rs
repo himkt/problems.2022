@@ -1,6 +1,39 @@
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+    let mut a: Vec<i64> = scanner.vec(n);
+    a.sort_unstable();
+    a.reverse();
+
+    let mut ahead = a[0];
+    let mut atail = a[n - 1];
+
+    let mut p = vec![];
+    let mut q = vec![];
+    for i in 1..(n - 1) {
+        if a[i] >= 0 {
+            p.push(a[i]);
+        }
+        else {
+            q.push(a[i]);
+        }
+    }
+
+    let psum: i64 = p.iter().sum::<i64>();
+    let qsum: i64 = q.iter().sum::<i64>();
+    let n = ahead + psum - qsum - atail;
+    println!("{}", n);
+
+    for pi in p {
+        println!("{} {}", atail, pi);
+        atail -= pi;
+    }
+    for qi in q {
+        println!("{} {}", ahead, qi);
+        ahead -= qi;
+    }
+    println!("{} {}", ahead, atail);
 }
 
 use std::io::Write;
