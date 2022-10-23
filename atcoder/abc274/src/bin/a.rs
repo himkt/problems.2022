@@ -3,6 +3,7 @@ fn main() {
     let mut scanner = Scanner::new();
     let a: f64 = scanner.cin();
     let b: f64 = scanner.cin();
+    println!("{:.3}", b / a);
 }
 
 use std::io::Write;
