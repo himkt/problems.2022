@@ -4,21 +4,27 @@ fn main() {
     let n: usize = scanner.cin();
     let p: Vec<usize> = scanner.vec(n);
 
-    let mut score_by_rotation = HashMap::new();
+    let mut cnt = vec![0; n];
     for i in 0..n {
-        // 料理 p[i] が (i - 1) % N, i (i + 1) % N に移動するための
-        // rotation 回数 q を求める
-        let q = (p[i] + n) - i;
-        *score_by_rotation.entry((q - 1) % n).or_insert(0) += 1;
-        *score_by_rotation.entry(q % n).or_insert(0) += 1;
-        *score_by_rotation.entry((q + 1) % n).or_insert(0) += 1;
+        if p[i] < i {
+            let r = i - p[i] - 1;
+            cnt[r] += 1;
+            cnt[(r + 1) % n] += 1;
+            cnt[(r + 2) % n] += 1;
+        }
+        else {
+            let r = n - (p[i] - i + 1);
+            cnt[r] += 1;
+            cnt[(r + 1) % n] += 1;
+            cnt[(r + 2) % n] += 1;
+        }
     }
 
-    let ans = score_by_rotation.values().max().unwrap();
+    let ans = cnt.iter().max().unwrap();
     println!("{}", ans);
 }
 
-use std::{io::Write, collections::HashMap};
+use std::io::Write;
 pub struct Scanner {
     buffer: std::collections::VecDeque<String>,
     buf: String,
