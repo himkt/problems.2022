@@ -4,9 +4,7 @@ struct Solver {
 
 impl Solver {
     pub fn new() -> Self {
-        let mut memo = HashMap::new();
-        memo.insert(0, 1);
-        Self { memo }
+        Self { memo: HashMap::new() }
     }
     pub fn solve(&mut self, n: usize) -> usize {
         if self.memo.contains_key(&n) {
