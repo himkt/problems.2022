@@ -1,6 +1,29 @@
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+    let mut dp = vec![0.0; n + 1];
+    dp[1] = 3.5;
+
+    for i in 2..=n {
+        // never reaching at 6
+        let x: usize = dp[i - 1] as usize;
+
+        let lower = x;
+        let upper = 6 - x;
+
+        let sum_lower = (x * (1 + x)) / 2;
+        let sum_upper = 21 - sum_lower;
+
+        let p_lower = lower as f64 / 6.0;
+        let p_upper = 1.0 / upper as f64;
+
+        let e_lower = p_lower * dp[i - 1];
+        let e_upper = (1.0 - p_lower) * (sum_upper as f64 * p_upper);
+        dp[i] = e_lower + e_upper;
+    }
+
+    println!("{}", dp[n]);
 }
 
 use std::io::Write;
