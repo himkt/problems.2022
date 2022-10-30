@@ -1,38 +1,83 @@
+const INF: usize = 1_000_000_000_000;
+
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
-}
+    let n: usize = scanner.cin();
+    let a: Vec<usize> = scanner.vec(n);
 
-
-use std::collections::VecDeque;
-use std::io::{self, Write};
-use std::str::FromStr;
-
-pub struct Scanner {
-    stdin: io::Stdin,
-    buffer: VecDeque<String>,
-}
-impl Scanner {
-    fn new() -> Self {
-        Self { stdin: io::stdin(), buffer: VecDeque::new() }
+    // a[0] を使う
+    let mut dp = vec![vec![INF; 2]; n];
+    dp[0][1] = a[0];
+    for i in 1..n {
+        dp[i][0] = dp[i-1][1];
+        dp[i][1] = dp[i-1][0].min(dp[i-1][1]) + a[i];
     }
+    let mut ans = dp[n - 1].iter().min().unwrap();
 
-    pub fn cin<T: FromStr>(&mut self) -> T {
-        while self.buffer.is_empty() {
-            let mut line = String::new();
-            let _ = self.stdin.read_line(&mut line);
-            for w in line.split_whitespace() {
-                self.buffer.push_back(String::from(w));
-            }
+    // a[0] を使わない
+    let mut dp = vec![vec![INF; 2]; n];
+    dp[0][0] = 0;
+    for i in 1..n {
+        dp[i][0] = dp[i-1][1];
+        dp[i][1] = dp[i-1][0].min(dp[i-1][1]) + a[i];
+    }
+    // a[0] を使っていないので a[n-1] は必ず使う必要がある
+    // (=dp[n-1][0] は a[0] も a[n-1] も使っていないので解の制約を満たしていない)
+    ans = ans.min(&dp[n-1][1]);
+
+    println!("{}", ans);
+}
+
+use std::io::Write;
+pub struct Scanner {
+    buffer: std::collections::VecDeque<String>,
+    buf: String,
+}
+#[allow(clippy::new_without_default)]
+impl Scanner {
+    pub fn new() -> Self {
+        Scanner {
+            buffer: std::collections::VecDeque::new(),
+            buf: String::new(),
         }
+    }
+    pub fn cin<T: std::str::FromStr>(&mut self) -> T {
+        if !self.buffer.is_empty() {
+            return self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap();
+        }
+        self.buf.truncate(0);
+        std::io::stdin().read_line(&mut self.buf).ok();
+        self.buf
+            .to_owned()
+            .split_whitespace()
+            .for_each(|x| self.buffer.push_back(String::from(x)));
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
     }
-
-    pub fn vec<T: FromStr>(&mut self, n: usize) -> Vec<T> {
+    pub fn vec<T: std::str::FromStr>(&mut self, n: usize) -> Vec<T> {
         (0..n).map(|_| self.cin()).collect()
+    }
+    pub fn flush(&self) {
+        std::io::stdout().flush().unwrap();
     }
 }
 
-pub fn flush() {
-    std::io::stdout().flush().unwrap();
+#[macro_export]
+macro_rules! debug {
+    () => {
+        #[cfg(debug_assertions)]
+        println!();
+    };
+    ($($arg:tt)*) => {
+        #[cfg(debug_assertions)]
+        println!($($arg)*);
+    };
+}
+
+#[macro_export]
+macro_rules! ndarray {
+    ($x:expr;) => { $x };
+    ($x:expr; $size:expr $( , $rest:expr )*) => {
+        vec![ndarray!($x; $($rest),*); $size]
+    };
 }
