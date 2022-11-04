@@ -1,7 +1,7 @@
-fn distance(p1: (usize, usize), p2: (usize, usize)) -> usize {
-    let v1 = p1.0.max(p2.0) - p1.0.min(p2.0);
-    let v2 = p1.1.max(p2.1) - p1.1.min(p2.1);
-    v1 + v2
+fn dist(l: usize, r: usize, points: &HashMap<usize, (i64, i64)>) -> i64 {
+    let lp = points[&l];
+    let rp = points[&r];
+    (lp.0 - rp.0).abs() + (lp.1 - rp.1).abs()
 }
 
 #[allow(clippy::needless_range_loop)]
@@ -11,47 +11,30 @@ fn main() {
     let w: usize = scanner.cin();
     let d: usize = scanner.cin();
 
-    let mut id2position = HashMap::new();
+    let mut points = HashMap::new();
     for i in 0..h {
         for j in 0..w {
-            let aij = scanner.cin::<usize>() - 1;
-            id2position.insert(aij, (i, j));
+            let aij: usize = scanner.cin::<usize>() - 1;
+            points.insert(aij, (i as i64, j as i64));
         }
     }
 
+    debug!("{:?}", points);
+    let mut dp = vec![0; h * w];
+    for s in 0..d {
+        let mut t = s + d;
+        while t < h * w {
+            dp[t] += dp[t - d] + dist(t - d, t, &points);
+            t += d;
+        }
+    }
+
+    debug!("{:?}", dp);
     let q: usize = scanner.cin();
-    let mut ls = vec![0; q];
-    let mut rs = vec![0; q];
-    for i in 0..q {
-        let l = scanner.cin::<usize>() - 1;
-        let r = scanner.cin::<usize>() - 1;
-        ls[i] = l;
-        rs[i] = r;
-    }
-
-    let n: usize = h * w;
-    let mut dist = ndarray!(0; n);
-
-    for u in 0..n {
-        if dist[u] != 0 {
-            continue;
-        }
-        let mut v = u + d;
-        while v < n {
-            let p1 = id2position[&(v - d)];
-            let p2 = id2position[&v];
-            dist[v] = dist[v - d] + distance(p1, p2);
-            v += d;
-        }
-    }
-
-    debug!("{:?}", dist);
-    for i in 0..q {
-        let mut ans = dist[rs[i]];
-        if ls[i] >= d {
-            ans -= dist[ls[i]];
-        }
-        println!("{}", ans);
+    for _ in 0..q {
+        let l: usize = scanner.cin::<usize>() - 1;
+        let r: usize = scanner.cin::<usize>() - 1;
+        println!("{}", dp[r] - dp[l])
     }
 }
 
