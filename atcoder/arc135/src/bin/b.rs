@@ -8,37 +8,40 @@ fn main() {
     let s: Vec<i64> = scanner.vec(n);
     let mut a = vec![0; m];
 
-    // a[0] := 0, a[1] := 0, a[2] := 0
+    a[0] = s[0];
     for i in 3..m {
         a[i] = s[i - 2] - s[i - 3] + a[i - 3];
     }
 
-    let mut minimums = vec![INF; 3];
+    let mut diff = vec![INF; 3];
     for i in 0..m {
-        minimums[i % 3] = minimums[i % 3].min(a[i]);
+        diff[i % 3] = diff[i % 3].min(a[i]);
     }
+    let diff0 = diff.clone();
 
-    for i in 0..m {
-        a[i] -= minimums[i % 3];
-    }
-
-    debug!("a={:?}", a);
-    let s0 = a[0] + a[1] + a[2];
-    if s0 > s[0] {
-        println!("No");
-        return;
-    }
-
-    let diff = s[0] - s0;
-    for i in 0..m {
-        if i % 3 == 0 {
-            a[i] += diff;
+    for i in 0..3 {
+        for j in 0..3 {
+            if i == j {
+                continue;
+            }
+            if diff[i] > 0 && diff[j] < 0 {
+                let pad = diff[j].abs().min(diff[i]);
+                diff[i] -= pad;
+                diff[j] += pad;
+            }
         }
     }
 
+    for i in 0..m {
+        a[i] += diff[i % 3] - diff0[i % 3];
+        if a[i] < 0 {
+            println!("No");
+            return;
+        }
+    }
     println!("Yes");
     for ai in a {
-        println!("{}", ai);
+        println!("{:?}", ai);
     }
 }
 
