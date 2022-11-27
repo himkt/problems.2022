@@ -2,80 +2,88 @@
 fn main() {
     let mut scanner = Scanner::new();
     let n: usize = scanner.cin();
-    let m: usize = 9;
-
-    let mut c: Vec<(usize, usize)> = (1..=m)
-        .map(|i| {
-            let ci: usize = scanner.cin();
-            (ci, i)
-        })
+    let c: Vec<usize> = scanner.vec(9);
+    let mut e: Vec<(usize, usize)> = c.iter().enumerate()
+        .map(|(i, &x)| (x, i + 1))
         .collect();
-    c.sort_unstable_by_key(|&(ci, i)| (ci, Reverse(i)));
 
-    let mut cc = vec![c[0]];
-    for i in 1..m {
-        if c[i].0 == cc.last().unwrap().0 {
-            continue;
-        }
-        cc.push(c[i]);
-    }
+    e.sort_unstable_by_key(|&(x, v)| (x, Reverse(v)));
+    debug!("{:?}", e);
 
-    let mut c = cc;
-    let (c0, i0) = c[0];
+    let mut nn = n;
+    let (min_cost, v) = e[0];
+    let nm = nn / min_cost;
+    let mut ans = vec![v; nm];
+    nn -= nm * min_cost;
 
-    let mut vs = vec![];
-    let mut xs = vec![];
-    let mut sum = 0;
-    while sum + c0 <= n {
-        vs.push(i0);
-        xs.push(c0);
-        sum += c0;
-    }
+    e.sort_unstable_by_key(|&(x, v)| (Reverse(v), x));
+    debug!("{:?}", e);
 
-    c.sort_unstable_by_key(|&(_, i)| Reverse(i));
-
-    let p = vs.len();
-    let m = c.len();
-
-    for k in 0..p {
-        for q in 0..m {
-            let (cj, j) = c[q];
-            if xs[k] > cj {
-                continue;
-            }
-
-            let diff = cj - c0;
-            if sum + diff <= n {
-                vs[k] = j;
-                xs[k] = cj;
-                sum += diff;
+    let cursor = 0;
+    for i in 0..nm {
+        let mut choice = None;
+        for j in cursor..9 {
+            let (cost, _) = e[j];
+            if nn + min_cost >= cost {
+                choice = Some(j);
                 break;
             }
         }
+        if let Some(k) = choice {
+            let (cost, vv) = e[k];
+            ans[i] = vv;
+            nn = nn + min_cost - cost;
+        }
+        else {
+            break;
+        }
     }
 
-    let ans: String = vs.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("");
+    let ans: String = ans.iter().map(|&x| x.to_string()).collect();
     println!("{}", ans);
 }
 
 use std::{io::Write, cmp::Reverse};
-pub fn flush() { std::io::stdout().flush().unwrap(); }
-pub struct Scanner { stdin: std::io::Stdin, buffer: std::collections::VecDeque<String> }
+pub struct Scanner {
+    buffer: std::collections::VecDeque<String>,
+    buf: String,
+}
+#[allow(clippy::new_without_default)]
 impl Scanner {
-    fn new() -> Self {
-        Self { stdin: std::io::stdin(), buffer: std::collections::VecDeque::new() }
-    }
-
-    pub fn cin<T: std::str::FromStr>(&mut self) -> T {
-        while self.buffer.is_empty() {
-            let mut line = String::new();
-            let _ = self.stdin.read_line(&mut line);
-            line.split_whitespace().for_each(|x| self.buffer.push_back(String::from(x)));
+    pub fn new() -> Self {
+        Scanner {
+            buffer: std::collections::VecDeque::new(),
+            buf: String::new(),
         }
+    }
+    pub fn cin<T: std::str::FromStr>(&mut self) -> T {
+        if !self.buffer.is_empty() {
+            return self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap();
+        }
+        self.buf.truncate(0);
+        std::io::stdin().read_line(&mut self.buf).ok();
+        self.buf
+            .to_owned()
+            .split_whitespace()
+            .for_each(|x| self.buffer.push_back(String::from(x)));
         self.buffer.pop_front().unwrap().parse::<T>().ok().unwrap()
     }
-
     pub fn vec<T: std::str::FromStr>(&mut self, n: usize) -> Vec<T> {
         (0..n).map(|_| self.cin()).collect()
     }
+    pub fn flush(&self) {
+        std::io::stdout().flush().unwrap();
+    }
+}
+
+#[macro_export]
+macro_rules! debug {
+    () => {
+        #[cfg(debug_assertions)]
+        println!();
+    };
+    ($($arg:tt)*) => {
+        #[cfg(debug_assertions)]
+        println!($($arg)*);
+    };
 }
