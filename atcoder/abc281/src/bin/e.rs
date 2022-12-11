@@ -1,9 +1,81 @@
 #[allow(clippy::needless_range_loop)]
 fn main() {
     let mut scanner = Scanner::new();
+    let n: usize = scanner.cin();
+    let m: usize = scanner.cin();
+    let k: usize = scanner.cin();
+    let a: Vec<usize> = scanner.vec(n);
+
+    let mut a_init = a.iter()
+        .take(m)
+        .cloned()
+        .enumerate()
+        .map(|(i, ai)| (ai, i))
+        .collect::<Vec<(usize, usize)>>();
+    a_init.sort_unstable();
+
+    let mut st_1st = BTreeSet::new();
+    let mut st_2nd = BTreeSet::new();
+    let mut tot = 0;
+
+    for i in 0..k {
+        st_1st.insert(a_init[i]);
+        tot += a_init[i].0;
+    }
+    for i in k..m {
+        st_2nd.insert(a_init[i]);
+    }
+
+    debug!("1st: {:?}, 2nd: {:?}", st_1st, st_2nd);
+    println!("{}", tot);
+
+    for (i, j) in (m..n).enumerate() {
+        let qot = (a[i], i);
+        let qin = (a[j], j);
+
+        if st_1st.contains(&qot) {
+            st_1st.remove(&qot);
+            tot -= qot.0;
+
+            if let Some(&qtop) = st_2nd.iter().next() {
+                if qin.0 < qtop.0 {
+                    st_1st.insert(qin);
+                    tot += qin.0;
+                }
+                else {
+                    st_1st.insert(qtop);
+                    st_2nd.remove(&qtop);
+                    st_2nd.insert(qin);
+                    tot += qtop.0;
+                }
+            }
+            else {
+                st_1st.insert(qin);
+                tot += qin.0;
+            }
+        }
+        else {
+            st_2nd.remove(&qot);
+
+            let &qtail = st_1st.iter().rev().next().unwrap();
+            if qin.0 < qtail.0 {
+                st_1st.remove(&qtail);
+                tot -= qtail.0;
+                st_1st.insert(qin);
+                tot += qin.0;
+                st_2nd.insert(qtail);
+            }
+            else {
+                st_2nd.insert(qin);
+            }
+        }
+
+        debug!("1st: {:?}, 2nd: {:?}", st_1st, st_2nd);
+        println!("{}", tot);
+    }
 }
 
-use std::io::Write;
+use std::{io::Write, collections::BTreeSet};
 pub struct Scanner {
     buffer: std::collections::VecDeque<String>,
     buf: String,
