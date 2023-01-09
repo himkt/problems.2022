@@ -19,11 +19,8 @@ fn main() {
     let mut vs = vec![0; n];
     let mut i = 0;
 
-    let leaf = (0..n).find(|&x| degs[x] == 1).unwrap();
-    let x = graph[leaf][0];
-
     let mut queue = VecDeque::new();
-    queue.push_back(x);
+    queue.push_back(0);
 
     while let Some(x) = queue.pop_front() {
         vs[x] = cs[i];
